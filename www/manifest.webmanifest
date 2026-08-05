@@ -1,0 +1,28 @@
+{
+  "name": "Ekklesia Music — Gestão do Ministério de Louvor",
+  "short_name": "Ekklesia Music",
+  "description": "Escalas, repertório, ensaios e confirmações do ministério de louvor em um só lugar.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#123F34",
+  "theme_color": "#123F34",
+  "categories": ["productivity", "lifestyle"],
+  "icons": [
+    {
+      "src": "icone.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icone.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

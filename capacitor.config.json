@@ -1,0 +1,11 @@
+{
+  "appId": "com.ekklesia.music",
+  "appName": "Ekklesia Music",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}
