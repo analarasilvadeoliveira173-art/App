@@ -61,7 +61,7 @@ async function abrirEEntrar(p = pagina) {
   if (await p.locator('#app').isVisible()) return;          // sessão restaurada
   await p.locator('#lg-user').fill('admin');
   await p.locator('#lg-pin').fill('1234');
-  await p.getByRole('button', { name: /Entrar como líder/i }).click();
+  await p.getByRole('button', { name: /^Entrar$/ }).click();
   await p.waitForTimeout(800);
 }
 
@@ -86,10 +86,24 @@ try {
   console.log('\nLogin da liderança');
   await pagina.locator('#lg-user').fill('admin');
   await pagina.locator('#lg-pin').fill('1234');
-  await pagina.getByRole('button', { name: /Entrar como líder/i }).click();
+  await pagina.getByRole('button', { name: /^Entrar$/ }).click();
   await pagina.waitForTimeout(800);
   ok('entra no aplicativo', await pagina.locator('#app').isVisible());
-  ok('abre no painel', (await pagina.locator('.page-head h2').first().textContent()).trim() === 'Painel');
+  const tituloPainel = (await pagina.locator('.page-head h2').first().textContent()).trim();
+  ok('abre no painel com saudação pelo horário', /^(Bom dia|Boa tarde|Boa noite), /.test(tituloPainel),
+    `título: "${tituloPainel}"`);
+  ok('mostra o próximo culto em destaque', await pagina.locator('.proximo').isVisible());
+  await pagina.waitForTimeout(900);   // a barra cresce com transição
+  // Mede a largura real: um <i> sem display:block aceita o atributo e não desenha nada.
+  const barra = await pagina.evaluate(() => {
+    const el = document.querySelector('.proximo-preenchido');
+    if (!el) return null;
+    return { pct: Number(el.dataset.pct), largura: el.offsetWidth, trilho: el.parentElement.offsetWidth };
+  });
+  ok('a barra da equipe é desenhada com a largura certa',
+    barra && barra.pct > 0 && barra.largura > 0 &&
+    Math.abs(barra.largura / barra.trilho * 100 - barra.pct) < 3,
+    barra ? `${barra.pct}% esperado, desenhou ${Math.round(barra.largura / barra.trilho * 100)}%` : 'barra não encontrada');
 
   console.log('\nSessão persistente');
   await pagina.reload({ waitUntil: 'networkidle' });
@@ -250,23 +264,16 @@ try {
   await celular.waitForTimeout(700);
   ok('sair leva ao login, não à página de vendas', await celular.locator('#login').isVisible());
 
-  const perfil = celular.locator('.member-login-card').first();
-  ok('lista os perfis dos membros', (await perfil.count()) > 0);
-  if (await perfil.count()) {
-    const pin = await celular.evaluate(() => {
-      const ativos = D.membros.filter(m => m.status === 'ativo')
-        .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
-      return ativos[0] && ativos[0].pin;
-    });
-    await perfil.click();
-    await celular.waitForTimeout(500);
-    if (await celular.locator('#mb-pin').count()) {
-      await celular.locator('#mb-pin').fill(String(pin));
-      await celular.locator('#mbOk').click();
-      await celular.waitForTimeout(800);
-    }
-    ok('o membro entra no próprio painel', await celular.locator('#app').isVisible());
-  }
+  const dadosMembro = await celular.evaluate(() => {
+    const m = D.membros.find(x => x.status === 'ativo' && x.pin);
+    return { nome: m.nome, pin: m.pin };
+  });
+  await celular.locator('#lg-user').fill(dadosMembro.nome);
+  await celular.locator('#lg-pin').fill(String(dadosMembro.pin));
+  await celular.getByRole('button', { name: /^Entrar$/ }).click();
+  await celular.waitForTimeout(800);
+  ok('o membro entra digitando o próprio nome', await celular.locator('#app').isVisible());
+  ok('entra com papel de membro', (await celular.evaluate(() => user && user.papel)) === 'membro');
 
   console.log('\nErros de JavaScript');
   ok('nenhum erro no console', erros.length === 0, erros.join(' | '));

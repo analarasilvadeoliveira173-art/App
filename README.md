@@ -158,8 +158,14 @@ build, e o arquivo pode ser enviado por e-mail ou pendrive se necessário.
 | **Líder** | Escalas, repertório, ensaios, membros e relatórios |
 | **Membro** | Vê as próprias escalas, confirma presença, informa indisponibilidade e — quando é voz principal — sugere louvores |
 
-Membros entram tocando no próprio nome na tela inicial, com PIN opcional.
-Líderes e administradores entram por usuário e senha.
+Todo mundo entra pela mesma tela, digitando **o próprio nome e a senha**.
+Membros usam o nome como está no cadastro (o primeiro nome basta, se não
+houver outra pessoa com ele); líderes e administradores podem usar o nome ou
+o login que o administrador criou. Acentos e maiúsculas não importam.
+
+Por isso a senha do membro é obrigatória no cadastro: sem ela a pessoa não
+consegue acessar. Quem estiver sem senha vê uma mensagem pedindo para
+procurar a liderança.
 
 ---
 

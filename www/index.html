@@ -70,24 +70,40 @@ button{font-family:inherit}
 .btn-sm{padding:7px 11px;font-size:13px;border-radius:9px}
 
 /* ---------- Login / tela de entrada ---------- */
-.auth-wrap{min-height:100dvh;display:block;position:relative;overflow:hidden;padding:0;background:
-  radial-gradient(circle at 14% 18%,rgba(14,107,92,.16),transparent 32%),
-  radial-gradient(circle at 86% 8%,rgba(201,162,39,.20),transparent 30%),
-  linear-gradient(135deg,#F8FAFC 0%,#EEF4F2 54%,#F6F0DF 100%)}
-.auth-wrap:before{content:"";position:absolute;inset:18px;border:1px solid rgba(255,255,255,.65);border-radius:28px;pointer-events:none}
-.auth-home{min-height:100dvh;display:grid;grid-template-columns:minmax(0,1fr) 350px;align-items:center;gap:52px;
-  padding:38px;position:relative;z-index:1;width:min(1240px,100%);margin:0 auto}
-.auth-center{width:100%;text-align:center;animation:rise .45s ease}
-.auth-kicker{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.74);border:1px solid rgba(227,232,239,.9);color:var(--primary-ink);padding:7px 12px;border-radius:999px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;box-shadow:var(--shadow)}
-.auth-kicker:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--gold)}
-.auth-title{font-family:'Manrope';font-size:clamp(30px,4vw,52px);line-height:1.02;font-weight:800;letter-spacing:-.04em;margin:18px 0 10px;color:var(--ink)}
-.auth-sub{max-width:620px;margin:0 auto 24px;color:var(--muted);font-size:15.5px}
-.auth-brand-row{display:flex;justify-content:center;align-items:center;gap:12px;margin-bottom:10px}
-.auth-brand-row .brand-mark{margin:0;width:58px;height:58px;border-radius:18px;font-size:26px}
-.auth-brand-name{text-align:left}.auth-brand-name b{font-family:'Manrope';font-size:19px}.auth-brand-name small{display:block;color:var(--muted);font-size:12px;margin-top:1px}
-.leader-login{width:100%;background:rgba(255,255,255,.9);border:1px solid rgba(227,232,239,.95);border-radius:20px;box-shadow:0 18px 50px rgba(22,32,46,.12);padding:18px;backdrop-filter:blur(12px);animation:rise .35s ease}
-.leader-login-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
-.leader-login-head b{font-family:'Manrope';font-size:16px}.leader-login-head small{display:block;color:var(--muted);font-size:12px;margin-top:2px}.leader-badge{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:12px;background:var(--primary-soft);color:var(--primary-ink);font-weight:800}
+/* ---------- Tela de entrada ----------
+   Fundo verde profundo com a pauta musical ao fundo: o formulário é uma
+   ilha clara sobre ele, para o olho ir direto ao que precisa ser preenchido. */
+.auth-wrap{min-height:100dvh;position:relative;overflow:hidden;padding:0;background:
+  radial-gradient(ellipse at 20% 0%,#1A5F50 0%,transparent 55%),
+  radial-gradient(ellipse at 90% 100%,#12463A 0%,transparent 50%),
+  linear-gradient(160deg,#0E3D33 0%,#0A2C25 60%,#0D2A21 100%)}
+.pauta{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.pauta-linha{position:absolute;left:-5%;right:-5%;height:1px;background:rgba(255,255,255,.07)}
+.nota{position:absolute;width:9px;height:9px;margin-top:-4px;border-radius:50%;
+  background:var(--gold);opacity:.34;animation:tocar 12s ease-in-out infinite alternate}
+.nota-gr{width:14px;height:14px;margin-top:-7px;opacity:.22}
+@keyframes tocar{from{top:var(--alto)}to{top:var(--baixo)}}
+@media (prefers-reduced-motion:reduce){.nota{animation:none;top:var(--alto)}}
+
+.auth-home{min-height:100dvh;display:grid;place-items:center;padding:32px 20px;position:relative;z-index:1}
+.auth-card{width:min(430px,100%);background:var(--surface);border-radius:26px;padding:34px 30px 26px;
+  box-shadow:0 30px 80px rgba(0,0,0,.34);animation:entrar-card .5s cubic-bezier(.2,.7,.3,1)}
+@keyframes entrar-card{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+.auth-title{font-family:'Manrope';font-size:33px;line-height:1.06;font-weight:800;letter-spacing:-.045em;margin:20px 0 8px;color:var(--ink)}
+.auth-sub{color:var(--muted);font-size:14.5px;margin:0 0 22px;line-height:1.55}
+.auth-form .field{margin-bottom:15px}
+.auth-brand-row{display:flex;align-items:center;gap:12px}
+.auth-brand-row .brand-mark{margin:0;width:46px;height:46px;border-radius:14px;font-size:21px}
+.auth-brand-name b{font-family:'Manrope';font-size:16px;letter-spacing:-.02em}
+.auth-brand-name small{display:block;color:var(--muted);font-size:12px;margin-top:1px}
+/* Digitar senha no celular sem ver o que se digita é a maior fonte de erro. */
+.senha-campo{position:relative}
+.senha-campo .input{padding-right:46px}
+.senha-ver{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:34px;height:34px;
+  display:grid;place-items:center;border:0;background:transparent;color:var(--muted);cursor:pointer;border-radius:9px}
+.senha-ver svg{width:19px;height:19px}
+.senha-ver:hover{background:var(--surface2);color:var(--ink)}
+.senha-ver.on{color:var(--primary)}
 .access-demo{margin-top:10px;padding-top:11px;border-top:1px dashed var(--line);text-align:center}
 .access-demo button{border:0;background:transparent;color:var(--primary);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;padding:4px 8px;border-radius:8px}
 .access-demo button:hover{background:var(--primary-soft)}
@@ -302,16 +318,6 @@ table.tbl tr:hover td{background:#fafcfd}
 
 
 /* ---------- Login de membro / Player / Sugestões ---------- */
-.member-panel{background:rgba(255,255,255,.78);border:1px solid rgba(227,232,239,.95);border-radius:24px;box-shadow:0 18px 60px rgba(22,32,46,.10);padding:18px;text-align:left;backdrop-filter:blur(10px)}
-.member-panel-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:14px;padding:2px 4px 12px;border-bottom:1px solid var(--line)}
-.member-panel-head b{font-family:'Manrope';font-size:18px}.member-panel-head span{color:var(--muted);font-size:13px}.member-count{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:28px;border-radius:999px;background:var(--gold-soft);color:var(--gold-ink);font-weight:800;font-size:12px}
-.member-login-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:12px;max-height:58vh;overflow:auto;padding:2px}
-.member-login-card{position:relative;display:flex;align-items:center;gap:12px;width:100%;border:1px solid var(--line);background:linear-gradient(180deg,#fff,#F9FBFC);border-radius:16px;padding:14px;cursor:pointer;text-align:left;transition:.18s;box-shadow:0 4px 14px rgba(22,32,46,.04)}
-.member-login-card:hover{background:#fff;border-color:#b9c7d6;transform:translateY(-2px);box-shadow:0 12px 26px rgba(22,32,46,.09)}
-.member-login-card b{display:block;font-size:14px;line-height:1.2;color:var(--ink);padding-right:18px}
-.member-login-card small{display:block;color:var(--muted);font-size:12px;margin-top:3px}
-.member-login-card:after{content:"›";position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--primary);font-size:24px;font-family:'Manrope'}
-.member-login-card .av{box-shadow:0 5px 14px rgba(22,32,46,.12)}
 .song-actions{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}
 .suggestion-card{border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:10px;background:var(--surface2)}
 .suggestion-card .s-title{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:7px}
@@ -348,11 +354,6 @@ table.tbl tr:hover td{background:#fafcfd}
 .wa-box{background:var(--surface2);border:1px solid var(--line);border-radius:11px;padding:14px;font-size:13.5px;white-space:pre-wrap;font-family:'DM Sans';line-height:1.55;max-height:300px;overflow:auto}
 
 @media(max-width:980px){
-  .auth-home{grid-template-columns:minmax(0,1fr);padding:28px 18px 32px;align-content:start;gap:18px}
-  .auth-wrap:before{inset:10px;border-radius:22px}
-  .leader-login{width:min(100%,420px);margin:0 auto 22px;order:2}
-  .auth-center{order:1;margin-top:18px}
-  .member-login-grid{max-height:none;grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
   .auth-sub{font-size:14.5px}
 }
 @media(max-width:860px){
@@ -382,13 +383,8 @@ h1,h2,h3,.num,.brand-mark,.sb-brand b,.topbar b{font-family:'Manrope',sans-serif
 .btn-primary:hover{transform:translateY(-1px);background:#0B3027}
 
 /* entrada e aplicativo */
-.auth-wrap{background:#F1F2EC}.auth-wrap:before{display:none}.auth-home{padding:48px;gap:60px}
-.auth-title{font-family:'Manrope';letter-spacing:-.05em}.auth-kicker{background:#fff;border-color:var(--line);box-shadow:none}
-.leader-login{border:0;border-radius:28px;padding:24px;box-shadow:0 24px 70px rgba(24,35,31,.12);backdrop-filter:none}
+.auth-title{letter-spacing:-.05em}
 .leader-badge{border-radius:50%;background:var(--primary);color:#fff}
-.member-panel{border:0!important;border-radius:28px!important;box-shadow:0 20px 60px rgba(24,35,31,.08)!important;background:rgba(255,255,255,.84)!important;padding:22px!important}
-.member-login-card{border:0;border-radius:17px;background:#fff;box-shadow:0 5px 18px rgba(24,35,31,.055)}
-.member-login-card:hover{border-color:transparent;box-shadow:0 12px 28px rgba(24,35,31,.10)}
 .sidebar{width:258px;background:var(--primary);border:0;padding:24px 18px;color:#fff}
 .sb-brand{padding:5px 9px 25px;border-bottom:1px solid rgba(255,255,255,.12)}
 .sb-brand .brand-mark{background:var(--gold);color:#29332f}.sb-brand small{color:rgba(255,255,255,.52)}
@@ -402,9 +398,8 @@ h1,h2,h3,.num,.brand-mark,.sb-brand b,.topbar b{font-family:'Manrope',sans-serif
 table.tbl th{background:#F4F6F2}table.tbl tr:hover td{background:#F8FAF7}
 .chip{padding:5px 10px}.modal{border-radius:24px!important}.topbar{background:var(--primary);color:#fff;border:0}.topbar .brand-mark{background:var(--gold);color:#29332f}.topbar .ico-btn{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12);color:#fff}
 .bottomnav{background:rgba(255,255,255,.96);backdrop-filter:blur(18px);box-shadow:0 -8px 30px rgba(24,35,31,.08);border:0}.bottomnav button.active{color:var(--primary)}
-@media(max-width:980px){.auth-home{grid-template-columns:minmax(0,1fr);padding:28px 18px 32px}}
 @media(max-width:860px){.main{margin-left:0;padding:24px 17px 100px}.page-head h2{font-size:24px}.topbar{padding:12px 16px}.kpis{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:560px){.kpis{grid-template-columns:1fr 1fr;gap:11px}.kpi{padding:16px}.kpi .num{font-size:25px}.leader-login{padding:20px;border-radius:22px}.member-panel{padding:14px!important}.member-login-grid{grid-template-columns:1fr}.page-head{align-items:flex-start}}
+@media(max-width:560px){.kpis{grid-template-columns:1fr 1fr;gap:11px}.kpi{padding:16px}.kpi .num{font-size:25px}.page-head{align-items:flex-start}}
 /* ---------- App nativo (Capacitor): status bar / safe areas ---------- */
 .topbar{padding-top:calc(12px + env(safe-area-inset-top))}
 .sidebar{padding-top:calc(24px + env(safe-area-inset-top))}
@@ -414,7 +409,62 @@ table.tbl th{background:#F4F6F2}table.tbl tr:hover td{background:#F8FAF7}
 @media (prefers-reduced-motion:no-preference){
   .btn:active{transform:scale(.98)}
   .ico-btn:active{transform:scale(.94)}
+  /* Os blocos do painel entram em sequência, na ordem em que se lê. */
+  .stagger>*{animation:surgir .42s cubic-bezier(.2,.7,.3,1) backwards}
+  .stagger>*:nth-child(1){animation-delay:.03s}
+  .stagger>*:nth-child(2){animation-delay:.07s}
+  .stagger>*:nth-child(3){animation-delay:.11s}
+  .stagger>*:nth-child(4){animation-delay:.15s}
+  .stagger>*:nth-child(5){animation-delay:.19s}
+  .stagger>*:nth-child(6){animation-delay:.23s}
+  .stagger>*:nth-child(7){animation-delay:.27s}
+  .stagger>*:nth-child(8){animation-delay:.31s}
 }
+@keyframes surgir{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ---------- O próximo culto, em destaque ----------
+   É a pergunta que traz a pessoa ao app: quando é, e o que falta. */
+.proximo{position:relative;overflow:hidden;border-radius:24px;padding:26px 28px;margin-bottom:20px;
+  background:linear-gradient(135deg,var(--primary) 0%,var(--primary-ink) 100%);color:#fff;
+  box-shadow:0 18px 45px rgba(10,50,42,.28)}
+.proximo:after{content:"";position:absolute;width:280px;height:280px;border-radius:50%;
+  right:-90px;top:-130px;background:var(--gold);opacity:.13;pointer-events:none}
+.proximo-topo{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;position:relative;z-index:1}
+.proximo-rotulo{font-size:11.5px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:rgba(255,255,255,.62)}
+.proximo-quando{font-family:'Manrope';font-size:29px;font-weight:800;letter-spacing:-.035em;margin:7px 0 3px;line-height:1.1}
+.proximo-onde{font-size:14px;color:rgba(255,255,255,.76);line-height:1.6}
+.proximo-conta{flex:none;text-align:center;min-width:92px;padding:13px 12px;border-radius:17px;
+  background:rgba(255,255,255,.13);backdrop-filter:blur(6px)}
+.proximo-conta b{display:block;font-family:'Manrope';font-size:32px;font-weight:800;line-height:1;letter-spacing:-.04em}
+.proximo-conta span{display:block;font-size:11px;margin-top:5px;color:rgba(255,255,255,.72);font-weight:600}
+.proximo-conta.hoje b{font-size:22px;line-height:1.3}
+/* Barra da equipe: mostra de relance se a escala está fechada. */
+.proximo-barra{position:relative;z-index:1;margin-top:20px}
+.proximo-barra-topo{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;
+  color:rgba(255,255,255,.78);margin-bottom:7px;font-weight:600}
+.proximo-trilho{height:6px;border-radius:99px;background:rgba(255,255,255,.16);overflow:hidden}
+/* display:block é necessário: <i> nasce inline e ignora largura e altura. */
+.proximo-preenchido{display:block;height:100%;border-radius:99px;background:var(--gold);width:0;
+  transition:width .8s cubic-bezier(.2,.7,.3,1)}
+.proximo-acoes{position:relative;z-index:1;display:flex;gap:9px;flex-wrap:wrap;margin-top:19px}
+.proximo-acoes .btn{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.2);color:#fff;backdrop-filter:blur(6px)}
+.proximo-acoes .btn:hover{background:rgba(255,255,255,.24);border-color:rgba(255,255,255,.34)}
+.proximo-acoes .btn-gold{background:var(--gold);border-color:var(--gold);color:#33280A}
+.proximo-acoes .btn-gold:hover{background:var(--gold);filter:brightness(1.06)}
+.proximo.vazio{background:var(--surface);color:var(--ink);box-shadow:var(--shadow);border:1px dashed var(--line)}
+.proximo.vazio:after{display:none}
+.proximo.vazio .proximo-rotulo{color:var(--muted)}
+.proximo.vazio .proximo-onde{color:var(--muted)}
+@media(max-width:560px){
+  .proximo{padding:22px 20px;border-radius:20px}
+  .proximo-topo{flex-direction:column;gap:16px}
+  .proximo-conta{align-self:flex-start;min-width:0;display:flex;align-items:baseline;gap:9px;padding:9px 15px}
+  .proximo-conta b{font-size:24px}
+  .proximo-conta span{margin-top:0}
+  .proximo-quando{font-size:24px}
+}
+/* Saudação do painel */
+.saudacao{font-family:'Manrope';font-weight:800;letter-spacing:-.035em}
 
 /* ============================================================
    TEMA ESCURO
@@ -433,14 +483,9 @@ table.tbl th{background:#F4F6F2}table.tbl tr:hover td{background:#F8FAF7}
 }
 
 :root[data-theme="dark"] .auth-wrap{background:
-  radial-gradient(circle at 14% 18%,rgba(18,63,52,.55),transparent 34%),
-  radial-gradient(circle at 86% 8%,rgba(201,162,39,.16),transparent 32%),
-  linear-gradient(135deg,#0F1512 0%,#141C19 56%,#1A1D16 100%)}
-:root[data-theme="dark"] .auth-wrap:before{border-color:rgba(255,255,255,.06)}
-:root[data-theme="dark"] .auth-kicker,
-:root[data-theme="dark"] .leader-login{background:rgba(23,31,27,.92);border-color:var(--line);color:var(--ink)}
-:root[data-theme="dark"] .member-login-card{background:var(--surface);border-color:var(--line)}
-:root[data-theme="dark"] .member-login-card:hover{background:var(--surface2);border-color:var(--primary-ink)}
+  radial-gradient(ellipse at 20% 0%,#14342C 0%,transparent 55%),
+  radial-gradient(ellipse at 90% 100%,#102A23 0%,transparent 50%),
+  linear-gradient(160deg,#0B241E 0%,#081A16 60%,#0A1712 100%)}
 
 :root[data-theme="dark"] .input,
 :root[data-theme="dark"] .select,
@@ -485,7 +530,6 @@ table.tbl th{background:#F4F6F2}table.tbl tr:hover td{background:#F8FAF7}
 :root[data-theme="dark"] .member-alert-card.empty:before{background:var(--line)}
 /* A camada premium define este fundo com !important, então o tema escuro
    precisa da mesma força para não deixar o painel claro no escuro. */
-:root[data-theme="dark"] .member-panel{background:rgba(23,31,27,.92)!important;box-shadow:0 20px 60px rgba(0,0,0,.35)!important}
 
 /* ============================================================
    ABERTURA E ERRO DE CARREGAMENTO
@@ -534,34 +578,52 @@ body.is-offline .net-bar{display:flex}
 
 <!-- ===================== LOGIN ===================== -->
 <div id="login" class="auth-wrap hidden">
+  <!-- Pauta musical: cinco linhas e algumas notas que sobem e descem devagar,
+       como uma melodia sendo tocada atrás do formulário. -->
+  <div class="pauta" aria-hidden="true">
+    <i class="pauta-linha" style="top:24%"></i><i class="pauta-linha" style="top:34%"></i>
+    <i class="pauta-linha" style="top:44%"></i><i class="pauta-linha" style="top:54%"></i>
+    <i class="pauta-linha" style="top:64%"></i>
+    <i class="nota" style="left:8%;--alto:24%;--baixo:44%;animation-duration:11s"></i>
+    <i class="nota" style="left:17%;--alto:44%;--baixo:34%;animation-duration:14s;animation-delay:-3s"></i>
+    <i class="nota" style="left:26%;--alto:54%;--baixo:24%;animation-duration:9s;animation-delay:-6s"></i>
+    <i class="nota nota-gr" style="left:36%;--alto:34%;--baixo:64%;animation-duration:16s;animation-delay:-2s"></i>
+    <i class="nota" style="left:63%;--alto:64%;--baixo:44%;animation-duration:12s;animation-delay:-8s"></i>
+    <i class="nota nota-gr" style="left:74%;--alto:24%;--baixo:54%;animation-duration:15s;animation-delay:-4s"></i>
+    <i class="nota" style="left:85%;--alto:44%;--baixo:24%;animation-duration:10s;animation-delay:-1s"></i>
+    <i class="nota" style="left:93%;--alto:54%;--baixo:64%;animation-duration:13s;animation-delay:-7s"></i>
+  </div>
+
   <div class="auth-home">
-    <section class="auth-center">
+    <main class="auth-card" role="main">
       <div class="auth-brand-row">
         <div class="brand-mark" data-brand-mark>E</div>
         <div class="auth-brand-name"><b data-brand-name>Ekklesia Music</b><small data-brand-sub>Ministério de Louvor</small></div>
       </div>
-      <div class="auth-kicker">Acesso rápido dos membros</div>
-      <h1 class="auth-title">Escolha seu perfil para entrar</h1>
-      <div id="memberLoginBox" class="member-panel hidden"></div>
-    </section>
 
-    <aside class="leader-login" aria-label="Acesso da liderança">
-      <div class="leader-login-head">
-        <div><b>Acesso da liderança</b><small>Administração e líderes</small></div>
-        <div class="leader-badge">L</div>
-      </div>
-      <div class="field">
-        <label for="lg-user">Usuário</label>
-        <input id="lg-user" class="input" autocomplete="username" placeholder="admin">
-      </div>
-      <div class="field">
-        <label for="lg-pin">Senha / PIN</label>
-        <input id="lg-pin" class="input" type="password" autocomplete="current-password" placeholder="••••" onkeydown="if(event.key==='Enter')entrar()">
-      </div>
-      <button class="btn btn-primary btn-block btn-lg" onclick="entrar()">Entrar como líder</button>
-      <p id="lg-hint" class="hint" style="text-align:center;margin-top:12px"></p>
+      <h1 class="auth-title">Entre para ver<br>sua escala</h1>
+      <p class="auth-sub">Digite seu nome e a senha que a liderança cadastrou.</p>
+
+      <form class="auth-form" onsubmit="event.preventDefault();entrar()">
+        <div class="field">
+          <label for="lg-user">Seu nome</label>
+          <input id="lg-user" class="input" autocomplete="username" placeholder="Como você está cadastrado" autocapitalize="words">
+        </div>
+        <div class="field">
+          <label for="lg-pin">Senha ou PIN</label>
+          <div class="senha-campo">
+            <input id="lg-pin" class="input" type="password" autocomplete="current-password" placeholder="••••">
+            <button type="button" class="senha-ver" onclick="alternarVerSenha(this)" aria-label="Mostrar a senha">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1.5 12S5 5.5 12 5.5 22.5 12 22.5 12 19 18.5 12 18.5 1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg" type="submit">Entrar</button>
+      </form>
+
+      <p id="lg-hint" class="hint" style="text-align:center;margin-top:14px"></p>
       <div class="access-demo hidden" id="demoAccessBox"><button type="button" onclick="preencherAcessoTeste()">Preencher acesso de teste</button></div>
-    </aside>
+    </main>
   </div>
 </div>
 
@@ -1279,7 +1341,6 @@ async function sincronizarAgora(silencioso){
   try{
     await carregar();
     if(user){ renderMenu(); ir(tela); }
-    renderMemberLoginProfiles();
     _ultimaSync=Date.now();
     if(!silencioso) toast(MODO_NUVEM?'Dados atualizados.':'Dados recarregados.');
   }catch(e){
@@ -1325,6 +1386,81 @@ function kpi(cls,ico,num,label){
 function alerta(tipo,ico,html){ return `<div class="alert alert-${tipo}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${ico}</svg><div>${html}</div></div>`; }
 
 function proximoCulto(){ return D.cultos.filter(c=>c.data>=hojeISO()&&c.status!=='realizada').sort((a,b)=>a.data<b.data?-1:1)[0]; }
+
+/* ---------- Próximo culto em destaque ---------- */
+const DIAS_SEMANA=['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+const MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+function saudacao(){
+  const h=new Date().getHours();
+  if(h<12) return 'Bom dia';
+  if(h<18) return 'Boa tarde';
+  return 'Boa noite';
+}
+function dataPorExtenso(iso){
+  const [y,m,d]=String(iso).slice(0,10).split('-').map(Number);
+  const dt=new Date(y,m-1,d);
+  return `${DIAS_SEMANA[dt.getDay()]}, ${d} de ${MESES[m-1]}`;
+}
+/* "faltam 3 dias" diz mais que uma data: é assim que a equipe pensa a semana. */
+function contagemCulto(iso){
+  const dias=-diasDesde(iso);
+  if(dias===0) return {n:'Hoje', rotulo:'', destaque:true};
+  if(dias===1) return {n:'Amanhã', rotulo:'', destaque:true};
+  return {n:String(dias), rotulo:dias===1?'dia':'dias', destaque:false};
+}
+/* Quantas posições da escala já têm gente: o líder vê se pode parar de correr atrás. */
+function preenchimentoCulto(cid){
+  const funcoes=funcoesDoCulto(cid);
+  if(!funcoes.length) return null;
+  const preenchidas=funcoes.filter(fn=>membrosDaFuncaoEscala(cid,fn).length).length;
+  return {preenchidas,total:funcoes.length,pct:Math.round(preenchidas/funcoes.length*100)};
+}
+function cardProximoCulto(){
+  const c=proximoCulto();
+  if(!c){
+    return `<div class="proximo vazio">
+      <div class="proximo-rotulo">Próximo culto</div>
+      <div class="proximo-quando" style="font-size:23px">Nenhum culto agendado</div>
+      <div class="proximo-onde">${podeEditar()?'Monte a escala do próximo culto para a equipe se organizar.':'A liderança ainda não publicou o próximo culto.'}</div>
+      ${podeEditar()?`<div class="proximo-acoes"><button class="btn btn-primary" onclick="novaEscala()">Montar escala</button></div>`:''}
+    </div>`;
+  }
+  const conta=contagemCulto(c.data);
+  const prog=preenchimentoCulto(c.id);
+  const louvores=louvoresDoCulto(c.id).length;
+  return `<div class="proximo">
+    <div class="proximo-topo">
+      <div>
+        <div class="proximo-rotulo">Próximo culto</div>
+        <div class="proximo-quando">${esc(c.tipo||'Culto')}</div>
+        <div class="proximo-onde">${dataPorExtenso(c.data)}${c.horario?' · '+esc(c.horario):''}${c.local?'<br>'+esc(c.local):''}</div>
+      </div>
+      <div class="proximo-conta ${conta.destaque?'hoje':''}">
+        <b>${esc(conta.n)}</b>${conta.rotulo?`<span>${conta.rotulo}</span>`:''}
+      </div>
+    </div>
+    ${prog?`<div class="proximo-barra">
+      <div class="proximo-barra-topo">
+        <span>Equipe escalada</span>
+        <span>${prog.preenchidas} de ${prog.total}${louvores?` · ${louvores} ${louvores>1?'louvores':'louvor'}`:''}</span>
+      </div>
+      <div class="proximo-trilho"><i class="proximo-preenchido" data-pct="${prog.pct}"></i></div>
+    </div>`:''}
+    <div class="proximo-acoes">
+      <button class="btn" onclick="abrirDetalhe('${c.id}')">Ver o culto</button>
+      ${podeEditar()?`<button class="btn" onclick="editarCulto('${c.id}')">Editar escala</button>
+      <button class="btn btn-gold" onclick="abrirWhats('${c.id}')">Avisar no WhatsApp</button>`:''}
+    </div>
+  </div>`;
+}
+/* A barra só ganha largura depois de estar na tela, para a transição acontecer. */
+function animarBarraProximo(){
+  requestAnimationFrame(()=>{
+    document.querySelectorAll('.proximo-preenchido[data-pct]').forEach(el=>{
+      el.style.width=el.dataset.pct+'%';
+    });
+  });
+}
 function proximoEnsaio(){ return D.ensaios.filter(e=>e.data>=hojeISO()&&e.status==='agendado').sort((a,b)=>a.data<b.data?-1:1)[0]; }
 function cultosFuturos(){ return D.cultos.filter(c=>c.data>=hojeISO()&&c.status!=='realizada'); }
 function vagosDoCulto(cid){ return funcoesDoCulto(cid).filter(f=>isVozPrincipal(f)&&!escalaDaFuncao(cid,f)?.membro_id); }
@@ -1352,7 +1488,11 @@ function renderPainel(){
     const c=D.cultos.find(c=>c.id===p.culto_id); al.push(alerta('bad',IC.xcirc,`<b>${esc(nomeMembro(p.membro_id))}</b> avisou ausência no culto de ${fmtData(c.data)}.${p.motivo?' Motivo: '+esc(p.motivo):''}`)); });
 
   main.innerHTML = `
-    <div class="page-head"><div><h2>Painel</h2><p>Visão geral do ministério</p></div></div>
+    <div class="page-head"><div>
+      <h2 class="saudacao">${saudacao()}, ${esc((user.nome||'').split(' ')[0])}</h2>
+      <p>Visão geral do ministério</p></div></div>
+
+    ${cardProximoCulto()}
 
     ${podeEditar()?`<div class="quick">
       <button class="btn btn-primary" onclick="novaEscala()">+ Montar escala</button>
@@ -1361,7 +1501,7 @@ function renderPainel(){
       <button class="btn" onclick="modalMembro()">+ Novo membro</button>
     </div>`:''}
 
-    <div class="grid kpis" style="margin-top:16px">
+    <div class="grid kpis stagger" style="margin-top:16px">
       ${kpi('','<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>', pc?fmtDataCurta(pc.data):'—', pc?('Próximo: '+(pc.tipo||'culto')):'Sem culto agendado')}
       ${kpi('info',IC.clock, pe?fmtDataCurta(pe.data):'—','Próximo ensaio')}
       ${kpi('',IC.users, ativos,'Membros ativos')}
@@ -1377,6 +1517,7 @@ function renderPainel(){
     <div class="section-title" style="justify-content:space-between"><span>Mural de avisos</span><button class="btn btn-sm" onclick="modalAviso()">+ Novo aviso</button></div>
     ${muralHTML()}
   `;
+  animarBarraProximo();
 }
 function addDias(n){ const d=new Date(); d.setDate(d.getDate()+n); return isoLocal(d); }
 
@@ -1412,8 +1553,10 @@ function renderPainelMembro(){
     </div>`;
   })() : `<div class="member-alert-card empty"><div class="member-alert-label">Próximo ensaio</div><div class="member-alert-title">Sem ensaio convocado</div><div class="member-alert-sub">Quando você for convocado para um ensaio, ele aparecerá aqui.</div></div>`;
   main.innerHTML = `
-    <div class="page-head"><div><h2>Olá, ${esc((user.nome||'').split(' ')[0])}</h2><p>Painel rápido do ministério de louvor</p></div></div>
-    <div class="member-alert-grid">${alertaCulto}${alertaEnsaio}</div>
+    <div class="page-head"><div>
+      <h2 class="saudacao">${saudacao()}, ${esc((user.nome||'').split(' ')[0])}</h2>
+      <p>O que vem por aí no ministério</p></div></div>
+    <div class="member-alert-grid stagger">${alertaCulto}${alertaEnsaio}</div>
     ${D.avisos.length?`<div class="section-title" style="margin-top:0">Mural de avisos</div>${muralHTML(3)}`:''}
     <div class="section-title" style="justify-content:space-between"><span>Suas próximas escalas</span><button class="btn btn-sm" onclick="modalIndisp()">Informar indisponibilidade</button></div>
     ${indispBloco()}
@@ -1432,6 +1575,7 @@ function renderPainelMembro(){
       </div>`;
     }).join('') : estadoVazio(IC.cal,'Nenhuma escala','Você não está escalado em cultos futuros no momento.')}
   `;
+  animarBarraProximo();
 }
 
 function estadoVazio(ico,titulo,texto,btn){
@@ -2133,7 +2277,7 @@ function modalMembro(id){
     <div class="row2"><div class="field"><label for="m-tel">Telefone (WhatsApp)</label><input id="m-tel" class="input" value="${esc(m.telefone||'')}" placeholder="73 99999-0000"></div>
       <div class="field"><label for="m-princ">Função principal</label><select id="m-princ" class="select">${opts(funcoesUI.map(f=>f.nome),normalizaFuncaoCadastro(m.funcao_principal),'Selecione')}</select></div></div>
     <div class="field"><label>Outras funções</label><div class="chk-grid" id="m-funcs">${funcoesUI.map(f=>`<label class="chk ${fids.has(f.id)?'on':''}"><input type="checkbox" value="${f.id}" ${fids.has(f.id)?'checked':''} onchange="this.closest('.chk').classList.toggle('on',this.checked)">${esc(f.nome)}</label>`).join('')}</div><div class="hint">Marque todas as funções que esse membro pode exercer. A escala será montada com base nisso.</div></div>
-    <div class="row2"><div class="field"><label for="m-pin">PIN de acesso</label><input id="m-pin" class="input" value="${esc(m.pin||'')}" placeholder="4 dígitos" maxlength="6"></div>
+    <div class="row2"><div class="field"><label for="m-pin">Senha de acesso ${id?'':'*'}</label><input id="m-pin" class="input" type="password" autocomplete="new-password" placeholder="${id?(m.pin?'Deixe em branco para manter':'Defina uma senha'):'4 a 6 dígitos'}" maxlength="6"></div>
       <div class="field"><label for="m-entrada">Entrou em</label><input id="m-entrada" class="input" type="date" value="${esc(m.data_entrada||'')}"></div></div>
     <div class="field"><label>Cor do avatar</label><div style="display:flex;gap:8px;flex-wrap:wrap">${CORES.map(c=>`<label style="cursor:pointer"><input type="radio" name="cor" value="${c}" ${cor===c?'checked':''} style="display:none" onchange="document.querySelectorAll('[data-sw]').forEach(s=>s.style.outline='none');this.nextElementSibling.style.outline='3px solid var(--ink)'"><span data-sw style="display:block;width:30px;height:30px;border-radius:50%;background:${c};outline:${cor===c?'3px solid var(--ink)':'none'};outline-offset:2px"></span></label>`).join('')}</div></div>
     <div class="field"><label for="m-status">Status</label><select id="m-status" class="select">${opts([{v:'ativo',t:'Ativo'},{v:'inativo',t:'Inativo'}],m.status||'ativo')}</select></div>
@@ -2141,8 +2285,14 @@ function modalMembro(id){
     `${id&&user.papel==='admin'?`<button class="btn" onclick="gerarAcesso('${id}')">Gerar acesso</button>`:''}<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" id="okBtn">${id?'Salvar':'Adicionar'}</button>`);
   document.getElementById('okBtn').onclick=async()=>{
     const nome=val('m-nome'); if(!nome){toast('Informe o nome.','bad');return;}
+    const pin=val('m-pin');
+    /* A pessoa entra digitando o próprio nome e esta senha, então ela é
+       obrigatória em cadastros novos — sem ela ninguém consegue acessar. */
+    if(!id&&!pin){toast('Defina uma senha de acesso para esta pessoa.','bad');return;}
+    if(pin&&pin.length<4){toast('A senha precisa ter pelo menos 4 caracteres.','bad');return;}
     const corSel=(document.querySelector('input[name=cor]:checked')||{}).value||CORES[0];
-    const dados={nome,telefone:val('m-tel')||null,funcao_principal:val('m-princ')||null,pin:val('m-pin')||null,data_entrada:rawVal('m-entrada')||null,cor_avatar:corSel,status:rawVal('m-status'),observacoes:val('m-obs')||null};
+    const dados={nome,telefone:val('m-tel')||null,funcao_principal:val('m-princ')||null,data_entrada:rawVal('m-entrada')||null,cor_avatar:corSel,status:rawVal('m-status'),observacoes:val('m-obs')||null};
+    if(pin) dados.pin=pin;
     const fns=[...document.querySelectorAll('#m-funcs input:checked')].map(i=>i.value);
     try{ let mid=id;
       if(id) await DB.update('membros',mid,dados); else{ const novo=await DB.insert('membros',dados); mid=novo.id; }
@@ -2182,7 +2332,7 @@ function excluirMembro(id){
       await DB.removeWhere('sugestoes_louvores','membro_id',id);
       for(const u of acessos) await DB.update('usuarios',u.id,{membro_id:null});
       await DB.remove('membros',id);
-      await carregar(); renderMemberLoginProfiles(); toast('Membro excluído.'); renderMembLista();
+      await carregar(); toast('Membro excluído.'); renderMembLista();
     }catch(e){ console.error(e); toast('Erro ao excluir o membro.','bad'); }
   });
 }
@@ -2430,54 +2580,98 @@ async function selecionarBackup(input){
     confirmar('Importar este backup substituirá os dados atuais deste navegador.',async()=>{
       STORAGE_TABLES.forEach(k=>mem[k]=Array.isArray(backup.dados[k])?backup.dados[k]:[]);
       garantirAdmin(); salvarLocal(); settings={...DEFAULT_SETTINGS,...(backup.configuracoes||{})};
-      localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings)); aplicarMarca(); await carregar(); renderMemberLoginProfiles(); ir('configuracoes'); toast('Backup importado.');
+      localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings)); aplicarMarca(); await carregar(); ir('configuracoes'); toast('Backup importado.');
     },'Importar');
   }catch(e){toast('O arquivo de backup não é válido.','bad');}
   input.value='';
 }
 function restaurarExemplo(){
   confirmar('Restaurar os dados de exemplo? Os dados atuais deste navegador serão substituídos.',async()=>{
-    seedDemo();salvarLocal();await carregar();renderMemberLoginProfiles();ir('painel');toast('Dados de exemplo restaurados.');
+    seedDemo();salvarLocal();await carregar();ir('painel');toast('Dados de exemplo restaurados.');
   },'Restaurar');
 }
 
-function renderMemberLoginProfiles(){
-  const box=document.getElementById('memberLoginBox'); if(!box)return;
-  const ativos=D.membros.filter(m=>m.status==='ativo').sort((a,b)=>(a.nome||'').localeCompare(b.nome||''));
-  if(!ativos.length){ box.classList.add('hidden'); box.innerHTML=''; return; }
-  box.classList.remove('hidden');
-  box.innerHTML=`<div class="member-panel-head"><div><b>Perfis disponíveis</b><br><span>Toque no seu nome para abrir seu painel de membro.</span></div><div class="member-count">${ativos.length}</div></div>
-    <div class="member-login-grid">${ativos.map(m=>`<button class="member-login-card" onclick="entrarMembro('${m.id}')">${avatar(m.nome,m.cor_avatar,'av-sm')}<span><b>${esc(m.nome)}</b><small>${esc(m.funcao_principal||'Membro do louvor')}</small></span></button>`).join('')}</div>`;
-}
-function entrarMembro(mid){
-  const m=membro(mid); if(!m){toast('Perfil não encontrado.','bad');return;}
-  if(m.pin){ pedirPinMembro(m); return; }
-  loginMembro(m);
-}
-function pedirPinMembro(m){
-  modal('Olá, '+((m.nome||'').split(' ')[0]),
-    `<p style="color:var(--muted);font-size:13.5px;margin-top:0">Digite seu PIN para abrir seu painel de membro.</p>
-     <div class="field"><label for="mb-pin">PIN</label><input id="mb-pin" class="input" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" onkeydown="if(event.key==='Enter')document.getElementById('mbOk').click()"></div>`,
-    `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" id="mbOk">Entrar</button>`);
-  document.getElementById('mbOk').onclick=()=>{
-    if(val('mb-pin')===String(m.pin)){ closeModal(); loginMembro(m); }
-    else toast('PIN incorreto.','bad');
-  };
-}
-function loginMembro(m){
-  user={nome:m.nome,usuario:'perfil-'+m.id,papel:'membro',membro_id:m.id,acesso_sem_senha:!m.pin};
-  abrirApp();
-}
 
 /* ===================== LOGIN / BOOT ===================== */
+/* Compara nomes ignorando acento, maiúscula e espaço sobrando: quem digita
+   "jose" no celular precisa encontrar "José". */
+function chaveNome(t){
+  return String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase().replace(/\s+/g,' ').trim();
+}
+function primeiroNome(t){ return chaveNome(t).split(' ')[0]; }
+
+/* Uma única porta de entrada: líderes usam o login que o admin criou,
+   membros usam o próprio nome. Procura nesta ordem para que um líder que
+   digite o próprio nome entre com o papel dele, não como membro comum. */
+function procurarAcesso(identificador){
+  const chave=chaveNome(identificador);
+  if(!chave) return {tipo:'vazio'};
+
+  const ativos=D.usuarios.filter(u=>u.ativo!==false);
+  const porLogin=ativos.find(u=>chaveNome(u.usuario)===chave);
+  if(porLogin) return {tipo:'usuario', registros:[porLogin]};
+
+  const porNomeUsuario=ativos.filter(u=>chaveNome(u.nome)===chave);
+  if(porNomeUsuario.length) return {tipo:'usuario', registros:porNomeUsuario};
+
+  const membrosAtivos=D.membros.filter(m=>m.status==='ativo');
+  const porNome=membrosAtivos.filter(m=>chaveNome(m.nome)===chave);
+  if(porNome.length) return {tipo:'membro', registros:porNome};
+
+  /* Só pelo primeiro nome, e apenas quando não houver dúvida de quem é. */
+  const porPrimeiro=membrosAtivos.filter(m=>primeiroNome(m.nome)===chave);
+  if(porPrimeiro.length===1) return {tipo:'membro', registros:porPrimeiro};
+  if(porPrimeiro.length>1) return {tipo:'ambiguo', registros:porPrimeiro};
+
+  const usuarioPrimeiro=ativos.filter(u=>primeiroNome(u.nome)===chave);
+  if(usuarioPrimeiro.length===1) return {tipo:'usuario', registros:usuarioPrimeiro};
+
+  return {tipo:'nenhum'};
+}
+
 function entrar(){
-  const u=val('lg-user'), p=val('lg-pin');
-  if(!u||!p){ toast('Informe usuário e senha.','bad'); return; }
-  const found=D.usuarios.find(x=>(x.usuario||'').toLowerCase()===u.toLowerCase()&&String(x.pin)===p&&x.ativo!==false);
-  if(!found){ toast('Usuário ou senha inválidos.','bad'); return; }
-  user={nome:found.nome,usuario:found.usuario,papel:found.papel,membro_id:found.membro_id||null};
+  const identificador=val('lg-user'), senha=val('lg-pin');
+  if(!identificador){ toast('Digite seu nome.','bad'); focar('lg-user'); return; }
+  if(!senha){ toast('Digite sua senha.','bad'); focar('lg-pin'); return; }
+
+  const achado=procurarAcesso(identificador);
+
+  if(achado.tipo==='ambiguo'){
+    toast('Há mais de uma pessoa com esse nome. Digite o nome completo.','bad');
+    focar('lg-user'); return;
+  }
+  if(achado.tipo==='nenhum'){
+    toast('Não encontrei esse nome. Confira com a liderança como você está cadastrado.','bad');
+    focar('lg-user'); return;
+  }
+
+  const certo=achado.registros.find(r=>String(r.pin)===senha);
+  if(!certo){
+    if(achado.tipo==='membro' && achado.registros.every(r=>!r.pin)){
+      toast('Seu acesso ainda não tem senha. Peça à liderança para cadastrar uma.','bad');
+    }else{
+      toast('Senha incorreta.','bad');
+    }
+    focar('lg-pin'); return;
+  }
+
+  if(achado.tipo==='usuario'){
+    user={nome:certo.nome,usuario:certo.usuario,papel:certo.papel,membro_id:certo.membro_id||null};
+  }else{
+    user={nome:certo.nome,usuario:'perfil-'+certo.id,papel:'membro',membro_id:certo.id};
+  }
   const pe=document.getElementById('lg-pin'); if(pe) pe.value='';
   abrirApp();
+}
+function focar(id){ const e=document.getElementById(id); if(e){ e.focus(); e.select&&e.select(); } }
+function alternarVerSenha(botao){
+  const campo=document.getElementById('lg-pin'); if(!campo) return;
+  const vendo=campo.type==='text';
+  campo.type=vendo?'password':'text';
+  botao.classList.toggle('on',!vendo);
+  botao.setAttribute('aria-label',vendo?'Mostrar a senha':'Ocultar a senha');
+  campo.focus();
 }
 function preencherAcessoTeste(){
   document.getElementById('lg-user').value='admin';
@@ -2489,8 +2683,7 @@ function sair(){
   confirmar('Deseja sair da sua conta?', ()=>{
     user=null; W=null; limparSessao();
     $('#app').classList.add('hidden');
-    $('#login').classList.remove('hidden');
-    renderMemberLoginProfiles(); atualizarDicaAdmin();
+    $('#login').classList.remove('hidden'); atualizarDicaAdmin();
     window.scrollTo(0,0);
     const pu=document.getElementById('lg-user'), pe=document.getElementById('lg-pin');
     if(pu)pu.value=''; if(pe)pe.value='';
@@ -2558,7 +2751,6 @@ async function carregarDados(){
     await DB.insert('usuarios',{id:'u-admin-nuvem',nome:'Administrador',usuario:'admin',pin:'1234',papel:'admin',ativo:true,membro_id:null});
     await carregar();
   }
-  renderMemberLoginProfiles();
   atualizarDicaAdmin();
   if(D._falhas && D._falhas.length){
     console.warn('Tabelas indisponíveis:', D._falhas.join(', '));
