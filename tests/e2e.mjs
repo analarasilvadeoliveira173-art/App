@@ -14,7 +14,6 @@ import { dirname, join, normalize } from 'node:path';
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..');
 const WWW = join(RAIZ, 'www');
-const PORTA = 5199;
 const TIPOS = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.svg': 'image/svg+xml',
   '.webmanifest': 'application/manifest+json', '.json': 'application/json'
@@ -39,8 +38,10 @@ const servidor = createServer(async (req, res) => {
     res.writeHead(200, { 'Content-Type': TIPOS[ext] || 'application/octet-stream' }).end(conteudo);
   } catch { res.writeHead(404).end('não encontrado'); }
 });
-await new Promise(r => servidor.listen(PORTA, r));
-const BASE = `http://localhost:${PORTA}/index.html`;
+// Porta 0: o sistema escolhe uma livre, então uma execução anterior travada
+// não impede a próxima de rodar.
+await new Promise(r => servidor.listen(0, '127.0.0.1', r));
+const BASE = `http://127.0.0.1:${servidor.address().port}/index.html`;
 
 const navegador = await chromium.launch();
 const contexto = await navegador.newContext({ viewport: { width: 1280, height: 900 } });
@@ -58,8 +59,8 @@ async function abrirEEntrar(p = pagina) {
   const offline = p.getByRole('button', { name: /Usar dados deste aparelho/i });
   if (await offline.count()) { await offline.click(); await p.waitForTimeout(900); }
   if (await p.locator('#app').isVisible()) return;          // sessão restaurada
-  const demo = p.getByRole('button', { name: /Ver demonstração/i }).first();
-  if (await demo.count()) { await demo.click(); await p.waitForTimeout(400); }
+  await p.locator('#lg-user').fill('admin');
+  await p.locator('#lg-pin').fill('1234');
   await p.getByRole('button', { name: /Entrar como líder/i }).click();
   await p.waitForTimeout(800);
 }
@@ -79,11 +80,12 @@ try {
   await pagina.getByRole('button', { name: /Usar dados deste aparelho/i }).click();
   await pagina.waitForTimeout(1200);
   ok('a tela de abertura sai do caminho', (await pagina.locator('#boot').count()) === 0);
-  ok('o app fica utilizável', await pagina.locator('#salesPage').isVisible());
+  ok('cai direto na tela de login, sem página de vendas', await pagina.locator('#login').isVisible());
+  ok('a página de vendas não existe mais', (await pagina.locator('#salesPage').count()) === 0);
 
   console.log('\nLogin da liderança');
-  await pagina.getByRole('button', { name: /Ver demonstração/i }).first().click();
-  await pagina.waitForTimeout(400);
+  await pagina.locator('#lg-user').fill('admin');
+  await pagina.locator('#lg-pin').fill('1234');
   await pagina.getByRole('button', { name: /Entrar como líder/i }).click();
   await pagina.waitForTimeout(800);
   ok('entra no aplicativo', await pagina.locator('#app').isVisible());
@@ -174,6 +176,54 @@ try {
   await pagina.locator('#avOk').click();
   await pagina.waitForTimeout(800);
   ok('publica aviso no mural', (await pagina.evaluate(() => D.avisos.length)) === 1);
+
+  console.log('\nExclusões não quebram o histórico');
+  const cenario = await pagina.evaluate(async () => {
+    const l = await DB.insert('louvores', { nome: 'Louvor de Teste', categoria: 'Adoração' });
+    const c = D.cultos[0];
+    await DB.insert('culto_louvores', { culto_id: c.id, louvor_id: l.id, ordem: 99 });
+    await carregar();
+    return { louvorId: l.id, cultoId: c.id };
+  });
+  await pagina.evaluate(id => window.excluirLouvor(id), cenario.louvorId);
+  await pagina.waitForTimeout(300);
+  await pagina.locator('#cfBtn').click();
+  await pagina.waitForTimeout(800);
+  const historico = await pagina.evaluate(id =>
+    D.culto_louvores.filter(c => c.nome_livre === 'Louvor de Teste').length, cenario.louvorId);
+  ok('excluir louvor preserva o nome nas escalas antigas', historico === 1,
+    `esperava 1 registro com nome_livre, achei ${historico}`);
+
+  const membroTeste = await pagina.evaluate(async () => {
+    const m = await DB.insert('membros', { nome: 'Para Excluir', status: 'ativo' });
+    await DB.insert('indisponibilidades', { membro_id: m.id, data_inicio: '2026-12-01', data_fim: '2026-12-02' });
+    await carregar();
+    return m.id;
+  });
+  await pagina.evaluate(() => window.ir('membros'));
+  await pagina.waitForTimeout(300);
+  await pagina.evaluate(id => window.excluirMembro(id), membroTeste);
+  await pagina.waitForTimeout(300);
+  await pagina.locator('#cfBtn').click();
+  await pagina.waitForTimeout(800);
+  const orfas = await pagina.evaluate(id => D.indisponibilidades.filter(i => i.membro_id === id).length, membroTeste);
+  ok('excluir membro não deixa indisponibilidades órfãs', orfas === 0, `sobraram ${orfas}`);
+
+  console.log('\nContagem do repertório');
+  const contagem = await pagina.evaluate(async () => {
+    const l = await DB.insert('louvores', { nome: 'Repetido', vezes_cantado: 0 });
+    const c = await DB.insert('cultos', { tipo: 'Teste', data: '2026-01-05', status: 'definida' });
+    await DB.insert('culto_louvores', { culto_id: c.id, louvor_id: l.id, ordem: 1 });
+    await DB.insert('culto_louvores', { culto_id: c.id, louvor_id: l.id, ordem: 2 });
+    await carregar();
+    return { louvorId: l.id, cultoId: c.id };
+  });
+  await pagina.evaluate(id => window.marcarRealizado(id), contagem.cultoId);
+  await pagina.waitForTimeout(300);
+  await pagina.locator('#cfBtn').click();
+  await pagina.waitForTimeout(900);
+  const vezes = await pagina.evaluate(id => (D.louvores.find(l => l.id === id) || {}).vezes_cantado, contagem.louvorId);
+  ok('louvor cantado duas vezes no culto conta 2', vezes === 2, `contou ${vezes}`);
 
   console.log('\nPersistência');
   const antes = await pagina.evaluate(() => ({ l: D.louvores.length, a: D.avisos.length, c: D.cultos.length }));

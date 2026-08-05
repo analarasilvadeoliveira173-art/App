@@ -51,31 +51,6 @@ a{color:var(--primary);text-decoration:none}
 button{font-family:inherit}
 .hidden{display:none !important}
 
-/* ---------- Site comercial (dentro do próprio HTML) ---------- */
-.sales-page{min-height:100vh;background:#fff;color:var(--ink)}
-.sales-container{width:min(1160px,calc(100% - 40px));margin:0 auto}
-.sales-nav{height:76px;display:flex;align-items:center;justify-content:space-between;gap:22px}
-.sales-logo{display:flex;align-items:center;gap:11px}.sales-logo .brand-mark{width:40px;height:40px;margin:0;border-radius:12px;font-size:18px}
-.sales-logo b{display:block;font:800 17px 'Manrope';line-height:1.1}.sales-logo small{display:block;color:var(--muted);font-size:11px;margin-top:3px}
-.sales-links{display:flex;align-items:center;gap:25px}.sales-links a{font-size:13.5px;font-weight:700;color:var(--muted)}.sales-links a:hover{color:var(--primary)}
-.sales-actions{display:flex;gap:9px}
-.sales-hero{min-height:610px;display:grid;grid-template-columns:1.05fr .95fr;align-items:center;gap:60px;padding:70px 0 90px}
-.sales-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:7px 11px;border-radius:999px;background:var(--primary-soft);color:var(--primary-ink);font-size:12px;font-weight:800}.sales-eyebrow:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--gold)}
-.sales-hero h1{font:800 clamp(40px,5.5vw,68px)/.99 'Manrope';letter-spacing:-.055em;margin:20px 0;color:var(--ink)}
-.sales-hero h1 span{color:var(--primary)}.sales-hero p{font-size:18px;line-height:1.7;color:var(--muted);max-width:610px;margin:0 0 30px}.sales-hero-buttons{display:flex;gap:11px;flex-wrap:wrap}.sales-note{font-size:12.5px;color:var(--muted);margin-top:15px}
-.sales-preview{position:relative;background:linear-gradient(145deg,var(--primary),var(--primary-ink));padding:30px;border-radius:30px;box-shadow:0 32px 70px rgba(10,79,68,.24)}
-.sales-preview:before{content:"";position:absolute;width:120px;height:120px;border-radius:50%;right:-25px;top:-35px;background:rgba(201,162,39,.28)}
-.preview-window{position:relative;background:#f5f7f9;border:1px solid rgba(255,255,255,.45);border-radius:18px;padding:16px;transform:rotate(-1deg)}
-.preview-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}.preview-brand{font:800 13px 'Manrope';color:var(--primary-ink)}.preview-dots{display:flex;gap:4px}.preview-dots i{width:6px;height:6px;background:#d4dae1;border-radius:50%}
-.preview-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.preview-kpi{background:#fff;border:1px solid #e7ebf0;border-radius:10px;padding:12px}.preview-kpi b{display:block;font:800 20px 'Manrope'}.preview-kpi small{font-size:9px;color:var(--muted)}
-.preview-card{background:#fff;border:1px solid #e7ebf0;border-radius:12px;margin-top:10px;padding:14px}.preview-card strong{font-size:12px}.preview-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #edf0f3}.preview-row:last-child{border:0}.preview-avatar{width:24px;height:24px;border-radius:50%;background:var(--primary-soft)}.preview-line{height:6px;border-radius:5px;background:#dfe5ea;flex:1}.preview-line.short{max-width:52px;background:var(--gold-soft)}
-.sales-section{padding:90px 0}.sales-section.alt{background:#f5f8f7}.sales-heading{text-align:center;max-width:690px;margin:0 auto 44px}.sales-heading span{color:var(--primary);font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.08em}.sales-heading h2{font-size:clamp(29px,4vw,43px);line-height:1.08;margin:10px 0 14px}.sales-heading p{color:var(--muted);font-size:16px;margin:0}
-.benefit-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.benefit{border:1px solid var(--line);border-radius:18px;padding:25px;background:#fff}.benefit-ico{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary);font-weight:800;margin-bottom:17px}.benefit h3{font-size:17px;margin-bottom:8px}.benefit p{color:var(--muted);font-size:13.5px;margin:0;line-height:1.65}
-.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:stretch}.plan{position:relative;background:#fff;border:1px solid var(--line);border-radius:21px;padding:28px;display:flex;flex-direction:column}.plan.featured{border:2px solid var(--primary);box-shadow:0 22px 50px rgba(14,107,92,.12)}.plan-tag{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--primary);color:#fff;border-radius:999px;padding:5px 13px;font-size:11px;font-weight:800;white-space:nowrap}.plan h3{font-size:20px}.plan-sub{color:var(--muted);font-size:13px;min-height:42px;margin:7px 0 20px}.plan-price{font:800 29px 'Manrope';margin-bottom:20px}.plan-price small{font:500 12px 'DM Sans';color:var(--muted)}.plan ul{list-style:none;padding:0;margin:0 0 24px;flex:1}.plan li{font-size:13.5px;padding:7px 0;color:#3d4a59}.plan li:before{content:"✓";font-weight:800;color:var(--primary);margin-right:9px}
-.sales-cta{padding:76px 0}.cta-box{border-radius:26px;padding:52px;background:linear-gradient(135deg,var(--primary),var(--primary-ink));color:#fff;display:flex;justify-content:space-between;align-items:center;gap:30px}.cta-box h2{font-size:34px;max-width:620px;margin-bottom:9px}.cta-box p{margin:0;color:rgba(255,255,255,.75)}.cta-box .btn{border-color:#fff;background:#fff;color:var(--primary-ink)}
-.sales-footer{border-top:1px solid var(--line);padding:28px 0;color:var(--muted);font-size:12.5px}.sales-footer .sales-container{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
-@media(max-width:900px){.sales-links{display:none}.sales-hero{grid-template-columns:1fr;padding:55px 0 70px;gap:45px}.benefit-grid,.plans{grid-template-columns:1fr}.plan-sub{min-height:0}.cta-box{align-items:flex-start;flex-direction:column}.sales-preview{max-width:620px;margin:auto}}
-@media(max-width:560px){.sales-container{width:min(100% - 28px,1160px)}.sales-nav .btn:not(.btn-primary){display:none}.sales-logo small{display:none}.sales-hero{padding-top:40px}.sales-hero h1{font-size:42px}.sales-hero p{font-size:16px}.sales-preview{padding:18px;border-radius:22px}.sales-section{padding:66px 0}.cta-box{padding:34px 25px}.cta-box h2{font-size:27px}.sales-actions .btn{padding:9px 11px;font-size:12.5px}}
 
 /* ---------- Botões ---------- */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);
@@ -100,8 +75,9 @@ button{font-family:inherit}
   radial-gradient(circle at 86% 8%,rgba(201,162,39,.20),transparent 30%),
   linear-gradient(135deg,#F8FAFC 0%,#EEF4F2 54%,#F6F0DF 100%)}
 .auth-wrap:before{content:"";position:absolute;inset:18px;border:1px solid rgba(255,255,255,.65);border-radius:28px;pointer-events:none}
-.auth-home{min-height:100dvh;display:grid;place-items:center;padding:38px 390px 38px 38px;position:relative;z-index:1}
-.auth-center{width:min(820px,100%);text-align:center;animation:rise .45s ease}
+.auth-home{min-height:100dvh;display:grid;grid-template-columns:minmax(0,1fr) 350px;align-items:center;gap:52px;
+  padding:38px;position:relative;z-index:1;width:min(1240px,100%);margin:0 auto}
+.auth-center{width:100%;text-align:center;animation:rise .45s ease}
 .auth-kicker{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.74);border:1px solid rgba(227,232,239,.9);color:var(--primary-ink);padding:7px 12px;border-radius:999px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;box-shadow:var(--shadow)}
 .auth-kicker:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--gold)}
 .auth-title{font-family:'Manrope';font-size:clamp(30px,4vw,52px);line-height:1.02;font-weight:800;letter-spacing:-.04em;margin:18px 0 10px;color:var(--ink)}
@@ -109,7 +85,7 @@ button{font-family:inherit}
 .auth-brand-row{display:flex;justify-content:center;align-items:center;gap:12px;margin-bottom:10px}
 .auth-brand-row .brand-mark{margin:0;width:58px;height:58px;border-radius:18px;font-size:26px}
 .auth-brand-name{text-align:left}.auth-brand-name b{font-family:'Manrope';font-size:19px}.auth-brand-name small{display:block;color:var(--muted);font-size:12px;margin-top:1px}
-.leader-login{position:absolute;right:28px;top:28px;width:330px;background:rgba(255,255,255,.9);border:1px solid rgba(227,232,239,.95);border-radius:20px;box-shadow:0 18px 50px rgba(22,32,46,.12);padding:18px;backdrop-filter:blur(12px);animation:rise .35s ease}
+.leader-login{width:100%;background:rgba(255,255,255,.9);border:1px solid rgba(227,232,239,.95);border-radius:20px;box-shadow:0 18px 50px rgba(22,32,46,.12);padding:18px;backdrop-filter:blur(12px);animation:rise .35s ease}
 .leader-login-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
 .leader-login-head b{font-family:'Manrope';font-size:16px}.leader-login-head small{display:block;color:var(--muted);font-size:12px;margin-top:2px}.leader-badge{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:12px;background:var(--primary-soft);color:var(--primary-ink);font-weight:800}
 .access-demo{margin-top:10px;padding-top:11px;border-top:1px dashed var(--line);text-align:center}
@@ -372,9 +348,9 @@ table.tbl tr:hover td{background:#fafcfd}
 .wa-box{background:var(--surface2);border:1px solid var(--line);border-radius:11px;padding:14px;font-size:13.5px;white-space:pre-wrap;font-family:'DM Sans';line-height:1.55;max-height:300px;overflow:auto}
 
 @media(max-width:980px){
-  .auth-home{padding:28px 18px 32px;align-content:start;gap:18px;place-items:stretch center}
+  .auth-home{grid-template-columns:minmax(0,1fr);padding:28px 18px 32px;align-content:start;gap:18px}
   .auth-wrap:before{inset:10px;border-radius:22px}
-  .leader-login{position:relative;right:auto;top:auto;width:min(100%,420px);margin:0 auto 22px;order:2}
+  .leader-login{width:min(100%,420px);margin:0 auto 22px;order:2}
   .auth-center{order:1;margin-top:18px}
   .member-login-grid{max-height:none;grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
   .auth-sub{font-size:14.5px}
@@ -399,51 +375,16 @@ table.tbl tr:hover td{background:#fafcfd}
    As variáveis de cor já foram unificadas no :root do topo do arquivo. */
 body{font-family:'DM Sans',sans-serif;letter-spacing:-.005em}
 h1,h2,h3,.num,.brand-mark,.sb-brand b,.topbar b{font-family:'Manrope',sans-serif}
-.sales-page{background:#F7F7F2;overflow:hidden}
-.sales-container{width:min(1200px,calc(100% - 64px))}
-.sales-nav{height:92px;position:relative;z-index:5}
-.sales-logo .brand-mark,.brand-mark{background:var(--primary);box-shadow:none;border-radius:50%}
-.sales-logo b{font-family:'Manrope';font-size:18px;letter-spacing:-.03em}
-.sales-logo small{text-transform:uppercase;letter-spacing:.1em;font-size:9px}
-.sales-links{gap:34px}.sales-links a{font-size:14px;font-weight:600;color:#56635e}
-.sales-actions .btn{border-radius:999px}
-.sales-hero{min-height:690px;grid-template-columns:1.02fr .98fr;gap:72px;padding:70px 0 110px;position:relative}
-.sales-hero:before{content:"";position:absolute;width:560px;height:560px;border-radius:50%;left:-360px;top:30px;background:#EEF1E9;z-index:0}
-.sales-hero>div{position:relative;z-index:1}
-.sales-eyebrow{padding:8px 13px;background:transparent;border:1px solid #CFD8D2;color:var(--primary);letter-spacing:.035em}
-.sales-eyebrow:before{background:var(--primary)}
-.sales-hero h1{font-family:'Manrope';font-size:clamp(45px,5.4vw,73px);line-height:1.02;letter-spacing:-.065em;margin:25px 0 23px;max-width:690px}
-.sales-hero h1 span{color:var(--primary);position:relative}
-.sales-hero h1 span:after{content:"";position:absolute;height:8px;border-radius:9px;left:2px;right:0;bottom:-3px;background:var(--gold);opacity:.62}
-.sales-hero p{font-size:18px;line-height:1.7;color:#5F6E67;max-width:570px}
-.sales-note{display:flex;align-items:center;gap:7px}.sales-note:before{content:"✓";width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary);font-size:11px;font-weight:800}
+.brand-mark{background:var(--primary);box-shadow:none;border-radius:50%}
 .btn{min-height:43px;border-radius:12px;border-color:#DDE3DE;font-weight:700;box-shadow:none}
 .btn-lg{min-height:50px;padding:13px 23px;border-radius:14px}
 .btn-primary{background:var(--primary);border-color:var(--primary);box-shadow:0 8px 24px rgba(18,63,52,.14)}
 .btn-primary:hover{transform:translateY(-1px);background:#0B3027}
-.sales-preview{background:var(--primary);border-radius:42px 42px 42px 12px;padding:28px;box-shadow:0 38px 90px rgba(18,63,52,.24);transform:rotate(1deg)}
-.sales-preview:before{width:150px;height:150px;right:-35px;top:-55px;background:var(--gold);opacity:.32}
-.preview-window{border-radius:27px;padding:22px;background:#F5F6F2;border:0;transform:rotate(-1deg);box-shadow:0 12px 40px rgba(9,35,29,.17)}
-.preview-top{padding-bottom:14px;border-bottom:1px solid var(--line)}
-.preview-kpis{gap:11px}.preview-kpi{border:0;border-radius:15px;padding:16px;box-shadow:0 3px 14px rgba(24,35,31,.05)}
-.preview-kpi b{font-family:'Manrope';color:var(--primary)}
-.preview-card{border:0;border-radius:18px;padding:18px;box-shadow:0 3px 14px rgba(24,35,31,.05)}
-.sales-section{padding:112px 0}.sales-section.alt{background:#EEF1EB;border-block:1px solid #E4E8E1}
-.sales-heading span{color:#8B6A2D;letter-spacing:.12em}.sales-heading h2{font-family:'Manrope';letter-spacing:-.045em}
-.benefit-grid{gap:20px}.benefit{border:0;border-radius:24px;padding:30px;background:rgba(255,255,255,.76);box-shadow:0 12px 35px rgba(24,35,31,.04);transition:.2s}
-.benefit:hover{transform:translateY(-4px);background:#fff}.benefit-ico{width:auto;height:auto;display:block;background:none;color:#9B7938;font-family:'Manrope';font-size:12px;letter-spacing:.12em;margin-bottom:28px}
-.benefit h3{font-family:'Manrope';font-size:19px}.benefit p{font-size:14px}
-.plans{gap:22px}.plan{border:1px solid var(--line);border-radius:26px;padding:34px;box-shadow:0 12px 35px rgba(24,35,31,.035)}
-.plan.featured{border:0;background:var(--primary);color:#fff;box-shadow:0 30px 60px rgba(18,63,52,.18);transform:translateY(-12px)}
-.plan.featured .plan-sub,.plan.featured li,.plan.featured .plan-price small{color:rgba(255,255,255,.7)}
-.plan.featured li:before{color:var(--gold)}.plan.featured .btn-primary{background:var(--gold);border-color:var(--gold);color:#2F2717}
-.plan-tag{background:var(--gold);color:#382D15}.plan h3{font-family:'Manrope';font-size:23px}.plan-price{font-family:'Manrope';font-size:26px}
-.cta-box{border-radius:32px;background:var(--primary);padding:62px}.cta-box h2{font-family:'Manrope';letter-spacing:-.04em}
 
 /* entrada e aplicativo */
-.auth-wrap{background:#F1F2EC}.auth-wrap:before{display:none}.auth-home{padding:48px 420px 48px 48px}
+.auth-wrap{background:#F1F2EC}.auth-wrap:before{display:none}.auth-home{padding:48px;gap:60px}
 .auth-title{font-family:'Manrope';letter-spacing:-.05em}.auth-kicker{background:#fff;border-color:var(--line);box-shadow:none}
-.leader-login{right:40px;top:40px;width:350px;border:0;border-radius:28px;padding:24px;box-shadow:0 24px 70px rgba(24,35,31,.12);backdrop-filter:none}
+.leader-login{border:0;border-radius:28px;padding:24px;box-shadow:0 24px 70px rgba(24,35,31,.12);backdrop-filter:none}
 .leader-badge{border-radius:50%;background:var(--primary);color:#fff}
 .member-panel{border:0!important;border-radius:28px!important;box-shadow:0 20px 60px rgba(24,35,31,.08)!important;background:rgba(255,255,255,.84)!important;padding:22px!important}
 .member-login-card{border:0;border-radius:17px;background:#fff;box-shadow:0 5px 18px rgba(24,35,31,.055)}
@@ -461,10 +402,9 @@ h1,h2,h3,.num,.brand-mark,.sb-brand b,.topbar b{font-family:'Manrope',sans-serif
 table.tbl th{background:#F4F6F2}table.tbl tr:hover td{background:#F8FAF7}
 .chip{padding:5px 10px}.modal{border-radius:24px!important}.topbar{background:var(--primary);color:#fff;border:0}.topbar .brand-mark{background:var(--gold);color:#29332f}.topbar .ico-btn{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12);color:#fff}
 .bottomnav{background:rgba(255,255,255,.96);backdrop-filter:blur(18px);box-shadow:0 -8px 30px rgba(24,35,31,.08);border:0}.bottomnav button.active{color:var(--primary)}
-@media(max-width:980px){.auth-home{padding:28px 18px 32px}.leader-login{right:auto;top:auto}}
-@media(max-width:900px){.sales-container{width:min(100% - 34px,1200px)}.sales-hero{padding-top:45px}.sales-preview{max-width:600px}.plan.featured{transform:none}}
+@media(max-width:980px){.auth-home{grid-template-columns:minmax(0,1fr);padding:28px 18px 32px}}
 @media(max-width:860px){.main{margin-left:0;padding:24px 17px 100px}.page-head h2{font-size:24px}.topbar{padding:12px 16px}.kpis{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:560px){.sales-container{width:min(100% - 28px,1200px)}.sales-nav{height:76px}.sales-hero{padding:38px 0 78px;gap:38px}.sales-hero h1{font-size:40px;line-height:1.04}.sales-hero p{font-size:16px}.sales-preview{padding:14px;border-radius:29px 29px 29px 9px}.preview-window{padding:14px}.preview-kpi{padding:11px}.preview-kpi b{font-size:17px}.sales-section{padding:76px 0}.benefit{padding:26px}.cta-box{padding:38px 26px}.kpis{grid-template-columns:1fr 1fr;gap:11px}.kpi{padding:16px}.kpi .num{font-size:25px}.leader-login{padding:20px;border-radius:22px}.member-panel{padding:14px!important}.member-login-grid{grid-template-columns:1fr}.page-head{align-items:flex-start}}
+@media(max-width:560px){.kpis{grid-template-columns:1fr 1fr;gap:11px}.kpi{padding:16px}.kpi .num{font-size:25px}.leader-login{padding:20px;border-radius:22px}.member-panel{padding:14px!important}.member-login-grid{grid-template-columns:1fr}.page-head{align-items:flex-start}}
 /* ---------- App nativo (Capacitor): status bar / safe areas ---------- */
 .topbar{padding-top:calc(12px + env(safe-area-inset-top))}
 .sidebar{padding-top:calc(24px + env(safe-area-inset-top))}
@@ -491,21 +431,6 @@ table.tbl th{background:#F4F6F2}table.tbl tr:hover td{background:#F8FAF7}
   --info-soft:#152340; --bad-soft:#331A1A;
   --shadow:0 10px 35px rgba(0,0,0,.38);
 }
-:root[data-theme="dark"] .sales-page{background:var(--bg)}
-:root[data-theme="dark"] .sales-section.alt{background:var(--surface)}
-:root[data-theme="dark"] .sales-links a{color:var(--muted)}
-:root[data-theme="dark"] .sales-eyebrow{border-color:var(--line);color:var(--primary-ink)}
-:root[data-theme="dark"] .sales-hero:before{background:#141C19}
-:root[data-theme="dark"] .benefit,
-:root[data-theme="dark"] .plan{background:var(--surface);border-color:var(--line)}
-:root[data-theme="dark"] .benefit:hover{background:var(--surface2)}
-:root[data-theme="dark"] .plan li{color:var(--ink)}
-:root[data-theme="dark"] .preview-window{background:var(--surface2)}
-:root[data-theme="dark"] .preview-kpi,
-:root[data-theme="dark"] .preview-card{background:var(--surface);border-color:var(--line)}
-:root[data-theme="dark"] .preview-line{background:var(--line)}
-:root[data-theme="dark"] .preview-dots i{background:var(--line)}
-:root[data-theme="dark"] .sales-footer{border-color:var(--line)}
 
 :root[data-theme="dark"] .auth-wrap{background:
   radial-gradient(circle at 14% 18%,rgba(18,63,52,.55),transparent 34%),
@@ -550,7 +475,6 @@ table.tbl th{background:#F4F6F2}table.tbl tr:hover td{background:#F8FAF7}
 :root[data-theme="dark"] .wa-box{background:var(--surface2);border-color:var(--line)}
 :root[data-theme="dark"] .step.on .s-num{color:#fff}
 :root[data-theme="dark"] .check.on .box{color:#fff}
-:root[data-theme="dark"] .cta-box .btn{background:var(--surface);border-color:var(--surface);color:var(--ink)}
 /* Alertas: as bordas e os textos originais foram pensados para fundo claro. */
 :root[data-theme="dark"] .alert-warn{border-color:#4A3D1E;color:#E8C158}
 :root[data-theme="dark"] .alert-info{border-color:#26406E;color:#8AB4FF}
@@ -559,7 +483,9 @@ table.tbl th{background:#F4F6F2}table.tbl tr:hover td{background:#F8FAF7}
 :root[data-theme="dark"] .empty .e-ico{background:var(--surface2);color:var(--muted)}
 :root[data-theme="dark"] .member-alert-card{background:var(--surface);border-color:var(--line)}
 :root[data-theme="dark"] .member-alert-card.empty:before{background:var(--line)}
-:root[data-theme="dark"] .member-panel{background:rgba(23,31,27,.9);border-color:var(--line)}
+/* A camada premium define este fundo com !important, então o tema escuro
+   precisa da mesma força para não deixar o painel claro no escuro. */
+:root[data-theme="dark"] .member-panel{background:rgba(23,31,27,.92)!important;box-shadow:0 20px 60px rgba(0,0,0,.35)!important}
 
 /* ============================================================
    ABERTURA E ERRO DE CARREGAMENTO
@@ -606,44 +532,6 @@ body.is-offline .net-bar{display:flex}
   </div>
 </div>
 
-<!-- ===================== APRESENTAÇÃO E PLANOS ===================== -->
-<div id="salesPage" class="sales-page">
-  <header class="sales-container sales-nav">
-    <div class="sales-logo"><div class="brand-mark">E</div><div><b>Ekklesia Music</b><small>Gestão para ministérios de louvor</small></div></div>
-    <nav class="sales-links"><a href="#recursos">Recursos</a><a href="#planos">Planos</a><a href="#contato">Para sua igreja</a></nav>
-    <div class="sales-actions"><button class="btn" onclick="abrirSistema()">Já sou cliente</button><button class="btn btn-primary" onclick="abrirDemonstracao()">Ver demonstração</button></div>
-  </header>
-  <main>
-    <section class="sales-container sales-hero">
-      <div>
-        <div class="sales-eyebrow">Organização que fortalece o ministério</div>
-        <h1>Seu louvor em <span>harmonia</span>, dentro e fora do altar.</h1>
-        <p>Escalas, repertório, ensaios, confirmações e comunicação reunidos em uma plataforma simples para líderes e membros.</p>
-        <div class="sales-hero-buttons"><button class="btn btn-primary btn-lg" onclick="abrirDemonstracao()">Conhecer o aplicativo</button><a class="btn btn-lg" href="#planos">Ver planos</a></div>
-        <div class="sales-note">Funciona em celular, tablet e computador.</div>
-      </div>
-      <div class="sales-preview" aria-label="Prévia do painel Ekklesia Music">
-        <div class="preview-window"><div class="preview-top"><span class="preview-brand">EKKLESIA MUSIC</span><span class="preview-dots"><i></i><i></i><i></i></span></div><div class="preview-kpis"><div class="preview-kpi"><b>12</b><small>membros ativos</small></div><div class="preview-kpi"><b>4</b><small>próximos cultos</small></div><div class="preview-kpi"><b>38</b><small>louvores</small></div></div><div class="preview-card"><strong>Próxima escala</strong><div class="preview-row"><i class="preview-avatar"></i><i class="preview-line"></i><i class="preview-line short"></i></div><div class="preview-row"><i class="preview-avatar"></i><i class="preview-line"></i><i class="preview-line short"></i></div><div class="preview-row"><i class="preview-avatar"></i><i class="preview-line"></i><i class="preview-line short"></i></div></div></div>
-      </div>
-    </section>
-    <section id="recursos" class="sales-section alt"><div class="sales-container"><div class="sales-heading"><span>Feito para a rotina da igreja</span><h2>Menos mensagens perdidas. Mais tempo para ministrar.</h2><p>Tudo o que a liderança precisa para planejar e tudo o que o membro precisa para se preparar.</p></div><div class="benefit-grid">
-      <article class="benefit"><div class="benefit-ico">01</div><h3>Escalas organizadas</h3><p>Monte equipes por culto, defina a voz principal e acompanhe as confirmações de cada integrante.</p></article>
-      <article class="benefit"><div class="benefit-ico">02</div><h3>Repertório centralizado</h3><p>Cadastre louvores, tons, links, observações e sugestões com aprovação da liderança.</p></article>
-      <article class="benefit"><div class="benefit-ico">03</div><h3>Ensaios mais produtivos</h3><p>Compartilhe repertórios com antecedência, registre presenças e mantenha todos alinhados.</p></article>
-      <article class="benefit"><div class="benefit-ico">04</div><h3>Painel para membros</h3><p>Cada pessoa visualiza suas próximas escalas, ensaios, músicas e avisos importantes.</p></article>
-      <article class="benefit"><div class="benefit-ico">05</div><h3>Identidade da igreja</h3><p>Personalize nome, ministério, sigla e cores para entregar uma experiência com a sua marca.</p></article>
-      <article class="benefit"><div class="benefit-ico">06</div><h3>Gestão completa</h3><p>Cadastros, funções, usuários, relatórios e histórico em uma interface clara e responsiva.</p></article>
-    </div></div></section>
-    <section id="planos" class="sales-section"><div class="sales-container"><div class="sales-heading"><span>Planos para cada fase</span><h2>Escolha a estrutura ideal para sua igreja</h2><p>Uma solução que acompanha o crescimento do ministério.</p></div><div class="plans">
-      <article class="plan"><h3>Essencial</h3><p class="plan-sub">Para ministérios que querem começar a organizar sua rotina.</p><div class="plan-price">Sob consulta</div><ul><li>Cadastro de membros</li><li>Escalas e cultos</li><li>Repertório de louvores</li><li>Acesso da liderança</li><li>Painel dos membros</li></ul><button class="btn btn-block" onclick="solicitarPlano('Essencial')">Quero este plano</button></article>
-      <article class="plan featured"><span class="plan-tag">MAIS ESCOLHIDO</span><h3>Crescimento</h3><p class="plan-sub">Para equipes que precisam de mais controle e participação.</p><div class="plan-price">Sob consulta</div><ul><li>Todos os recursos do Essencial</li><li>Gestão de ensaios</li><li>Sugestões e aprovações</li><li>Relatórios do ministério</li><li>Personalização da igreja</li></ul><button class="btn btn-primary btn-block" onclick="solicitarPlano('Crescimento')">Quero este plano</button></article>
-      <article class="plan"><h3>Completo</h3><p class="plan-sub">Para igrejas que desejam uma experiência personalizada.</p><div class="plan-price">Sob consulta</div><ul><li>Todos os recursos do Crescimento</li><li>Configuração personalizada</li><li>Implantação assistida</li><li>Treinamento da liderança</li><li>Suporte prioritário</li></ul><button class="btn btn-block" onclick="solicitarPlano('Completo')">Quero este plano</button></article>
-    </div></div></section>
-    <section id="contato" class="sales-cta"><div class="sales-container"><div class="cta-box"><div><h2>Pronta para organizar o louvor da sua igreja?</h2><p>Conheça o aplicativo por dentro e veja como ele se adapta ao seu ministério.</p></div><button class="btn btn-lg" onclick="abrirDemonstracao()">Abrir demonstração</button></div></div></section>
-  </main>
-  <footer class="sales-footer"><div class="sales-container"><span>© 2026 Ekklesia Music. Todos os direitos reservados.</span><span>Gestão feita com propósito para ministérios de louvor.</span></div></footer>
-</div>
-
 <!-- ===================== LOGIN ===================== -->
 <div id="login" class="auth-wrap hidden">
   <div class="auth-home">
@@ -673,7 +561,6 @@ body.is-offline .net-bar{display:flex}
       <button class="btn btn-primary btn-block btn-lg" onclick="entrar()">Entrar como líder</button>
       <p id="lg-hint" class="hint" style="text-align:center;margin-top:12px"></p>
       <div class="access-demo hidden" id="demoAccessBox"><button type="button" onclick="preencherAcessoTeste()">Preencher acesso de teste</button></div>
-      <div class="access-demo"><button type="button" onclick="voltarApresentacao()">← Voltar à apresentação e aos planos</button></div>
     </aside>
   </div>
 </div>
@@ -738,7 +625,6 @@ body.is-offline .net-bar{display:flex}
    ============================================================ */
 const STORAGE_KEY = 'ekklesia_music_dados_v3';
 const SETTINGS_KEY = 'ekklesia_music_config_v1';
-const CLIENT_KEY = 'ekklesia_music_cliente_v1';
 /* Sessão: mantém a pessoa logada ao fechar e reabrir o aplicativo. */
 const SESSION_KEY = 'ekklesia_music_sessao_v1';
 const SESSION_MAX_DIAS = 30;
@@ -753,8 +639,6 @@ const IGREJA_ID = 'igreja-local';
 const SUPABASE_URL = 'https://jrpneeqwaejvzvxwcjup.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpycG5lZXF3YWVqdnp2eHdjanVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MDk0MTIsImV4cCI6MjEwMTM4NTQxMn0.u4m5CBZsoZJHFL3BQ2kGA8scX5OmHP42Cs8ZN59yI2E';
 const MODO_NUVEM = !!(SUPABASE_URL&&SUPABASE_KEY);
-/* WhatsApp que recebe os pedidos de plano da página comercial (ex.: '5573999990000') */
-const CONTATO_COMERCIAL_WHATSAPP = '';
 
 /* ---------- Constantes ---------- */
 const CORES = ['#0E6B5C','#C9A227','#2563EB','#DC2626','#7C3AED','#0891B2','#DB2777','#16A34A','#EA580C','#475569'];
@@ -852,9 +736,36 @@ function salvarLocal(){
     localStorage.setItem(STORAGE_KEY,JSON.stringify(dados));
     return true;
   }catch(e){ console.warn('Não foi possível salvar os dados neste navegador.',e);
+    const cheio = e && (e.name==='QuotaExceededError' || e.code===22 || e.code===1014);
     if(!salvarLocal._avisou){ salvarLocal._avisou=true; setTimeout(()=>{salvarLocal._avisou=false;},8000);
-      try{ toast('Atenção: não foi possível salvar os dados. Verifique o espaço do navegador ou se está em aba anônima.','bad'); }catch(_){} }
+      try{ toast(cheio
+        ? 'O armazenamento deste aparelho encheu. Remova arquivos anexados aos louvores ou baixe um backup — o que você acabou de fazer não foi gravado.'
+        : 'Atenção: não foi possível salvar os dados. Verifique o espaço do navegador ou se está em aba anônima.','bad'); }catch(_){} }
     return false; }
+}
+/* Quanto o app já ocupa neste aparelho, em bytes aproximados. */
+function espacoUsadoLocal(){
+  try{ return (localStorage.getItem(STORAGE_KEY)||'').length; }catch(e){ return 0; }
+}
+/* Testa de verdade se ainda cabe: o limite do navegador varia, então
+   estimar por conta própria erraria. Grava uma chave descartável do
+   tamanho pedido e apaga em seguida. */
+function cabeNoArmazenamento(bytes){
+  if(usandoDadosLocais===false && MODO_NUVEM) return true;   /* na nuvem o limite é outro */
+  const chave='__ekklesia_teste_espaco__';
+  try{
+    localStorage.setItem(chave,'x'.repeat(Math.max(0,Math.ceil(bytes))));
+    localStorage.removeItem(chave);
+    return true;
+  }catch(e){
+    try{ localStorage.removeItem(chave); }catch(_){}
+    return false;
+  }
+}
+function formatarTamanho(bytes){
+  if(bytes>=1048576) return (bytes/1048576).toFixed(1).replace('.',',')+' MB';
+  if(bytes>=1024) return Math.round(bytes/1024)+' KB';
+  return bytes+' bytes';
 }
 function carregarLocal(){
   try{
@@ -980,10 +891,8 @@ function restaurarSessao(){
   return true;
 }
 function abrirApp(){
-  $('#salesPage').classList.add('hidden');
   $('#login').classList.add('hidden');
   $('#app').classList.remove('hidden');
-  try{ localStorage.setItem(CLIENT_KEY,'1'); }catch(e){}
   salvarSessao(); preencherUser(); tela='painel'; renderMenu(); ir('painel');
 }
 function garantirAdmin(){
@@ -1261,7 +1170,24 @@ function modal(title, bodyHtml, footHtml){
   </div>`;
   ov.onclick = closeModal;
   document.body.appendChild(ov);
+  /* Roda depois do código que atribui os onclick dos botões de ação. */
+  setTimeout(()=>ov.querySelectorAll('button[id]').forEach(protegerBotao),0);
   setTimeout(()=>{ const f=ov.querySelector('.modal-body input:not([type=hidden]), .modal-body select, .modal-body textarea')||ov.querySelector('.modal-foot .btn-primary'); if(f)f.focus(); },60);
+}
+/* Salvar grava no banco e só depois fecha o modal. Nesse intervalo dava tempo
+   de clicar de novo e criar o registro duas vezes — em conexão lenta, fácil. */
+function protegerBotao(b){
+  const original=b.onclick;
+  if(!original||b._protegido) return;
+  b._protegido=true;
+  b.onclick=async ev=>{
+    if(b.disabled) return;
+    const rotulo=b.textContent;
+    b.disabled=true; b.textContent='Aguarde…';
+    try{ await original.call(b,ev); }
+    catch(e){ console.error(e); toast('Não consegui concluir a ação.','bad'); }
+    finally{ if(b.isConnected){ b.disabled=false; b.textContent=rotulo; } }
+  };
 }
 function closeModal(){ const o=$('#ov'); if(o) o.remove(); }
 function confirmar(msg, onYes, labelYes='Excluir', btnClass='btn-danger'){
@@ -1736,12 +1662,18 @@ function marcarRealizado(cid){
   confirmar(`Marcar o culto de ${fmtData(c.data)} como realizado? Os louvores da lista terão a contagem de vezes e a "última vez" atualizadas no repertório.`, async()=>{
     try{
       await DB.update('cultos',cid,{status:'realizada'});
+      /* Conta as repetições primeiro: quando o mesmo louvor entra duas vezes
+         na lista, ler o total do estado em memória a cada volta somava só uma. */
+      const vezesPorLouvor=new Map();
       for(const cl of louvoresDoCulto(cid)){
         if(!cl.louvor_id) continue;
-        const l=D.louvores.find(x=>x.id===cl.louvor_id); if(!l) continue;
-        const patch={vezes_cantado:(l.vezes_cantado||0)+1};
+        vezesPorLouvor.set(cl.louvor_id,(vezesPorLouvor.get(cl.louvor_id)||0)+1);
+      }
+      for(const [louvorId,vezes] of vezesPorLouvor){
+        const l=D.louvores.find(x=>x.id===louvorId); if(!l) continue;
+        const patch={vezes_cantado:(l.vezes_cantado||0)+vezes};
         if(!l.ultima_vez||l.ultima_vez<c.data) patch.ultima_vez=c.data;
-        await DB.update('louvores',cl.louvor_id,patch);
+        await DB.update('louvores',louvorId,patch);
       }
       await carregar(); toast('Culto marcado como realizado. Repertório atualizado.'); renderEscalaDetalhe(cid);
     }catch(e){ console.error(e); toast('Erro ao concluir o culto.','bad'); }
@@ -2017,15 +1949,57 @@ function modalLouvor(id){
   };
 }
 async function marcarUsado(id){ const l=D.louvores.find(x=>x.id===id); if(!l) return; await DB.update('louvores',id,{vezes_cantado:(l.vezes_cantado||0)+1,ultima_vez:hojeISO()}); await carregar(); toast('Marcado como usado hoje.'); renderLouvLista(); }
-function excluirLouvor(id){ const l=D.louvores.find(x=>x.id===id); if(!l) return; confirmar(`Excluir o louvor "${l.nome}"?`, async()=>{ await DB.remove('louvores',id); await carregar(); toast('Louvor excluído.'); renderLouvLista(); }); }
+function excluirLouvor(id){
+  const l=D.louvores.find(x=>x.id===id); if(!l) return;
+  const emCultos=D.culto_louvores.filter(c=>c.louvor_id===id).length;
+  const emEnsaios=D.ensaio_louvores.filter(c=>c.louvor_id===id).length;
+  const usos=emCultos+emEnsaios;
+  const aviso = usos
+    ? `Ele aparece em ${usos} ${usos>1?'listas':'lista'} de culto ou ensaio. O nome continuará no histórico, mas o louvor sai do repertório.`
+    : '';
+  confirmar(`Excluir o louvor "${l.nome}"? ${aviso}`, async()=>{
+    try{
+      /* Guarda o nome nas listas antigas antes de apagar: sem isso, escalas já
+         realizadas passariam a mostrar "—" no lugar do louvor cantado. */
+      for(const cl of D.culto_louvores.filter(c=>c.louvor_id===id))
+        await DB.update('culto_louvores',cl.id,{louvor_id:null,nome_livre:cl.nome_livre||l.nome});
+      for(const el of D.ensaio_louvores.filter(c=>c.louvor_id===id))
+        await DB.remove('ensaio_louvores',el.id);
+      for(const s of D.sugestoes_louvores.filter(x=>x.louvor_id===id))
+        await DB.update('sugestoes_louvores',s.id,{louvor_id:null,nome_livre:s.nome_livre||l.nome});
+      await DB.remove('louvores',id);
+      await carregar(); toast('Louvor excluído do repertório.'); renderLouvLista();
+    }catch(e){ console.error(e); toast('Erro ao excluir o louvor.','bad'); }
+  });
+}
 
 let ANEXO_TMP;
+/* No modo local tudo mora no localStorage, que costuma ter só ~5 MB para o
+   app inteiro. Um arquivo grande em base64 (que ocupa ~1/3 a mais) enchia a
+   cota e fazia o salvamento falhar, levando junto o resto dos dados. */
+const LIMITE_ANEXO_LOCAL = 1024*1024;      /* 1 MB */
+const LIMITE_ANEXO_NUVEM = 2*1024*1024;    /* 2 MB */
+function limiteAnexo(){ return (MODO_NUVEM && !usandoDadosLocais) ? LIMITE_ANEXO_NUVEM : LIMITE_ANEXO_LOCAL; }
 function lerAnexoLouvor(input){
   const f=input.files&&input.files[0]; if(!f) return;
-  if(f.size>2*1024*1024){ toast('Arquivo muito grande. Enquanto os dados ficam no navegador, o limite é 2 MB por louvor.','bad'); input.value=''; return; }
+  const limite=limiteAnexo();
+  if(f.size>limite){
+    toast(`Arquivo de ${formatarTamanho(f.size)}. O limite por louvor é ${formatarTamanho(limite)}`+
+      ((MODO_NUVEM&&!usandoDadosLocais)?'.':', porque os dados ficam guardados neste aparelho.'),'bad');
+    input.value=''; return;
+  }
   const r=new FileReader();
-  r.onload=()=>{ ANEXO_TMP={nome:f.name,tipo:f.type||'application/octet-stream',tamanho:f.size,dados:r.result};
-    const b=document.getElementById('f-arq-atual'); if(b) b.innerHTML='<div class="hint" style="margin-top:8px">📎 '+esc(f.name)+' — será salvo junto com o louvor.</div>'; };
+  r.onload=()=>{
+    const dados=r.result;
+    /* base64 ocupa mais que o arquivo original — é o tamanho real que precisa caber */
+    if(!cabeNoArmazenamento(dados.length)){
+      toast('Não há espaço neste aparelho para mais este arquivo. Remova anexos de outros louvores ou conecte o app à nuvem.','bad');
+      input.value=''; return;
+    }
+    ANEXO_TMP={nome:f.name,tipo:f.type||'application/octet-stream',tamanho:f.size,dados};
+    const b=document.getElementById('f-arq-atual');
+    if(b) b.innerHTML='<div class="hint" style="margin-top:8px">📎 '+esc(f.name)+' ('+formatarTamanho(f.size)+') — será salvo junto com o louvor.</div>';
+  };
   r.onerror=()=>toast('Não consegui ler o arquivo.','bad');
   r.readAsDataURL(f);
 }
@@ -2190,12 +2164,27 @@ async function gerarAcesso(id){ const m=membro(id);
   const pin=m.pin||String(Math.floor(1000+Math.random()*9000));
   try{ await DB.insert('usuarios',{nome:m.nome,usuario:u,pin,papel:'membro',membro_id:id,ativo:true}); await carregar(); closeModal(); toast('Acesso criado — usuário: '+u+' · PIN: '+pin); }catch(e){toast('Erro ao criar acesso.','bad');}
 }
-function excluirMembro(id){ const m=membro(id); if(!m) return;
-  confirmar(`Excluir ${m.nome}? As participações em escalas serão desvinculadas.`, async()=>{
-    await DB.removeWhere('membros_funcoes','membro_id',id);
-    for(const e of D.escalas.filter(e=>e.membro_id===id)) await DB.update('escalas',e.id,{membro_id:null});
-    await DB.removeWhere('presencas','membro_id',id);
-    await DB.remove('membros',id); await carregar(); toast('Membro excluído.'); renderMembLista(); });
+function excluirMembro(id){
+  const m=membro(id); if(!m) return;
+  const acessos=D.usuarios.filter(u=>u.membro_id===id);
+  const aviso=acessos.length
+    ? ` O acesso de ${acessos.map(u=>u.usuario).join(', ')} deixará de estar vinculado a esta pessoa.`
+    : '';
+  confirmar(`Excluir ${m.nome}? As participações em escalas serão desvinculadas.${aviso}`, async()=>{
+    try{
+      await DB.removeWhere('membros_funcoes','membro_id',id);
+      for(const e of D.escalas.filter(e=>e.membro_id===id)) await DB.update('escalas',e.id,{membro_id:null});
+      await DB.removeWhere('presencas','membro_id',id);
+      /* Sem isto sobravam registros apontando para uma pessoa que não existe
+         mais: bloqueios de data que ninguém consegue remover, sugestões sem
+         autor e logins presos a um membro fantasma. */
+      await DB.removeWhere('indisponibilidades','membro_id',id);
+      await DB.removeWhere('sugestoes_louvores','membro_id',id);
+      for(const u of acessos) await DB.update('usuarios',u.id,{membro_id:null});
+      await DB.remove('membros',id);
+      await carregar(); renderMemberLoginProfiles(); toast('Membro excluído.'); renderMembLista();
+    }catch(e){ console.error(e); toast('Erro ao excluir o membro.','bad'); }
+  });
 }
 /* ===================== RELATÓRIOS ===================== */
 function renderRelatorios(){
@@ -2495,21 +2484,11 @@ function preencherAcessoTeste(){
   document.getElementById('lg-pin').value='1234';
   document.getElementById('lg-pin').focus();
 }
-function abrirSistema(){ $('#salesPage').classList.add('hidden'); $('#login').classList.remove('hidden'); window.scrollTo(0,0); }
-function abrirDemonstracao(){ abrirSistema(); preencherAcessoTeste(); }
-function voltarApresentacao(){ $('#login').classList.add('hidden'); $('#salesPage').classList.remove('hidden'); window.scrollTo(0,0); }
-function solicitarPlano(plano){
-  const texto=`Olá! Tenho interesse no plano ${plano} do Ekklesia Music para minha igreja.`;
-  if(CONTATO_COMERCIAL_WHATSAPP){ abrirExterno(waLink(CONTATO_COMERCIAL_WHATSAPP,texto)); return; }
-  if(navigator.share){ navigator.share({title:'Ekklesia Music',text:texto}).catch(()=>{}); return; }
-  try{ navigator.clipboard&&navigator.clipboard.writeText(texto); }catch(e){}
-  modal('Fale com a gente',`<p style="font-size:14px;margin-top:0">A mensagem abaixo foi copiada. Envie pelo seu canal de atendimento preferido:</p><div class="wa-box">${esc(texto)}</div>`,
-    `<button class="btn btn-primary" onclick="closeModal()">Fechar</button>`);
-}
+function abrirSistema(){ $('#login').classList.remove('hidden'); window.scrollTo(0,0); }
 function sair(){
   confirmar('Deseja sair da sua conta?', ()=>{
     user=null; W=null; limparSessao();
-    $('#app').classList.add('hidden'); $('#salesPage').classList.add('hidden');
+    $('#app').classList.add('hidden');
     $('#login').classList.remove('hidden');
     renderMemberLoginProfiles(); atualizarDicaAdmin();
     window.scrollTo(0,0);
@@ -2560,10 +2539,7 @@ document.addEventListener('keydown',e=>{
    o app (sessão válida), a tela de login (já é cliente) ou a apresentação. */
 function abrirTelaInicial(){
   if(restaurarSessao()) return;
-  let jaCliente=false;
-  try{ jaCliente = localStorage.getItem(CLIENT_KEY)==='1'; }catch(e){}
-  /* Num app instalado a página comercial não faz sentido: quem instalou já é cliente. */
-  if(jaCliente || capNativo()) abrirSistema();
+  abrirSistema();
 }
 
 /* O atalho de acesso de teste só existe enquanto a senha padrão não foi
