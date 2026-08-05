@@ -1,0 +1,232 @@
+/* ============================================================
+   Testes de ponta a ponta no navegador.
+   Roda com: npm run test:e2e
+
+   O Supabase é sempre bloqueado: os testes exercitam o caminho
+   de queda para os dados do aparelho, que é justamente o que
+   precisa continuar funcionando quando a internet falha.
+   ============================================================ */
+import { chromium } from 'playwright';
+import { createServer } from 'node:http';
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { dirname, join, normalize } from 'node:path';
+
+const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..');
+const WWW = join(RAIZ, 'www');
+const PORTA = 5199;
+const TIPOS = {
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.svg': 'image/svg+xml',
+  '.webmanifest': 'application/manifest+json', '.json': 'application/json'
+};
+
+let falhas = 0;
+const erros = [];
+
+function ok(descricao, condicao, detalhe) {
+  if (condicao) console.log(`  ✓ ${descricao}`);
+  else { falhas++; console.log(`  ✗ ${descricao}${detalhe ? ' — ' + detalhe : ''}`); }
+}
+
+// ---------- servidor estático mínimo ----------
+const servidor = createServer(async (req, res) => {
+  const caminho = normalize(decodeURIComponent(req.url.split('?')[0])).replace(/^(\.\.[/\\])+/, '');
+  const arquivo = join(WWW, caminho === '/' ? 'index.html' : caminho);
+  if (!arquivo.startsWith(WWW)) { res.writeHead(403).end(); return; }
+  try {
+    const conteudo = await readFile(arquivo);
+    const ext = arquivo.slice(arquivo.lastIndexOf('.'));
+    res.writeHead(200, { 'Content-Type': TIPOS[ext] || 'application/octet-stream' }).end(conteudo);
+  } catch { res.writeHead(404).end('não encontrado'); }
+});
+await new Promise(r => servidor.listen(PORTA, r));
+const BASE = `http://localhost:${PORTA}/index.html`;
+
+const navegador = await chromium.launch();
+const contexto = await navegador.newContext({ viewport: { width: 1280, height: 900 } });
+const pagina = await contexto.newPage();
+pagina.on('pageerror', e => erros.push('erro de página: ' + e.message));
+pagina.on('console', m => {
+  const t = m.text();
+  if (m.type() === 'error' && !/Failed to fetch|ERR_|net::/.test(t)) erros.push('console: ' + t);
+});
+await pagina.route('**/rest/v1/**', r => r.abort());
+
+async function abrirEEntrar(p = pagina) {
+  await p.goto(BASE, { waitUntil: 'networkidle' });
+  await p.waitForTimeout(1400);
+  const offline = p.getByRole('button', { name: /Usar dados deste aparelho/i });
+  if (await offline.count()) { await offline.click(); await p.waitForTimeout(900); }
+  if (await p.locator('#app').isVisible()) return;          // sessão restaurada
+  const demo = p.getByRole('button', { name: /Ver demonstração/i }).first();
+  if (await demo.count()) { await demo.click(); await p.waitForTimeout(400); }
+  await p.getByRole('button', { name: /Entrar como líder/i }).click();
+  await p.waitForTimeout(800);
+}
+
+try {
+  console.log('\nAbertura com o servidor fora do ar');
+  await pagina.goto(BASE, { waitUntil: 'networkidle' });
+  await pagina.waitForTimeout(1500);
+  ok('mostra a tela de abertura em vez de página em branco', await pagina.locator('#boot').isVisible());
+  const msg = await pagina.locator('#bootMsg').textContent();
+  ok('explica a falha em português', /servidor/i.test(msg), `mensagem: "${msg}"`);
+  ok('oferece "Tentar de novo"', await pagina.getByRole('button', { name: /Tentar de novo/i }).count() > 0);
+  ok('oferece continuar com os dados do aparelho',
+    await pagina.getByRole('button', { name: /Usar dados deste aparelho/i }).count() > 0);
+
+  console.log('\nQueda para os dados do aparelho');
+  await pagina.getByRole('button', { name: /Usar dados deste aparelho/i }).click();
+  await pagina.waitForTimeout(1200);
+  ok('a tela de abertura sai do caminho', (await pagina.locator('#boot').count()) === 0);
+  ok('o app fica utilizável', await pagina.locator('#salesPage').isVisible());
+
+  console.log('\nLogin da liderança');
+  await pagina.getByRole('button', { name: /Ver demonstração/i }).first().click();
+  await pagina.waitForTimeout(400);
+  await pagina.getByRole('button', { name: /Entrar como líder/i }).click();
+  await pagina.waitForTimeout(800);
+  ok('entra no aplicativo', await pagina.locator('#app').isVisible());
+  ok('abre no painel', (await pagina.locator('.page-head h2').first().textContent()).trim() === 'Painel');
+
+  console.log('\nSessão persistente');
+  await pagina.reload({ waitUntil: 'networkidle' });
+  await pagina.waitForTimeout(1600);
+  const off2 = pagina.getByRole('button', { name: /Usar dados deste aparelho/i });
+  if (await off2.count()) { await off2.click(); await pagina.waitForTimeout(1000); }
+  ok('continua logado sem pedir a senha de novo', await pagina.locator('#app').isVisible());
+
+  console.log('\nTema');
+  await pagina.locator('.sidebar [data-tema-btn]').click();
+  await pagina.waitForTimeout(400);
+  ok('alterna para o escuro', await pagina.locator('html').getAttribute('data-theme') === 'dark');
+  await pagina.locator('.sidebar [data-tema-btn]').click();
+  await pagina.waitForTimeout(400);
+  ok('volta para o claro', await pagina.locator('html').getAttribute('data-theme') === 'light');
+
+  console.log('\nNavegação');
+  for (const [tela, titulo] of [
+    ['escalas', 'Escalas'], ['louvores', 'Louvores'], ['ensaios', 'Ensaios'],
+    ['membros', 'Membros'], ['relatorios', 'Relatórios'], ['perfil', 'Meu perfil'],
+    ['usuarios', 'Usuários'], ['configuracoes', 'Configurações']
+  ]) {
+    await pagina.evaluate(t => window.ir(t), tela);
+    await pagina.waitForTimeout(300);
+    const h = (await pagina.locator('.page-head h2').first().textContent()).trim();
+    ok(`${tela} abre "${titulo}"`, h === titulo, `abriu "${h}"`);
+  }
+
+  console.log('\nMontagem de escala');
+  const cultosAntes = await pagina.evaluate(() => D.cultos.length);
+  await pagina.evaluate(() => window.novaEscala());
+  await pagina.waitForTimeout(600);
+  await pagina.locator('#w-data').fill('2026-12-25');
+  await pagina.locator('#w-tipo').fill('Culto de Natal');
+  for (let i = 0; i < 5; i++) {
+    const avancar = pagina.getByRole('button', { name: /Avançar|Próximo|Continuar/i }).first();
+    if (await avancar.count() && await avancar.isVisible()) { await avancar.click(); await pagina.waitForTimeout(450); }
+  }
+  const salvar = pagina.getByRole('button', { name: /Salvar escala|Concluir|Salvar/i }).first();
+  if (await salvar.count() && await salvar.isVisible()) { await salvar.click(); await pagina.waitForTimeout(900); }
+  const cultosDepois = await pagina.evaluate(() => D.cultos.length);
+  ok('o wizard cria o culto', cultosDepois === cultosAntes + 1, `${cultosAntes} → ${cultosDepois}`);
+
+  console.log('\nSenhas');
+  const pinAntes = await pagina.evaluate(() => (D.usuarios.find(u => u.usuario === 'joao') || {}).pin);
+  await pagina.evaluate(() => window.ir('usuarios'));
+  await pagina.waitForTimeout(400);
+  await pagina.evaluate(() => window.modalUsuario(D.usuarios.find(x => x.usuario === 'joao').id));
+  await pagina.waitForTimeout(400);
+  ok('o campo de PIN não expõe a senha atual', (await pagina.locator('#u-pin').inputValue()) === '');
+  await pagina.locator('#u-nome').fill('João Pereira Editado');
+  await pagina.locator('#okBtn').click();
+  await pagina.waitForTimeout(800);
+  const usuarioDepois = await pagina.evaluate(() => D.usuarios.find(u => u.usuario === 'joao'));
+  ok('salva a edição', usuarioDepois.nome === 'João Pereira Editado');
+  ok('PIN em branco mantém a senha', usuarioDepois.pin === pinAntes, `${pinAntes} → ${usuarioDepois.pin}`);
+
+  await pagina.evaluate(() => window.modalUsuario(D.usuarios.find(x => x.usuario === 'joao').id));
+  await pagina.waitForTimeout(400);
+  await pagina.locator('#u-pin').fill('12');
+  await pagina.locator('#okBtn').click();
+  await pagina.waitForTimeout(500);
+  ok('recusa PIN com menos de 4 caracteres', (await pagina.locator('#ov').count()) > 0);
+  await pagina.evaluate(() => window.closeModal());
+
+  console.log('\nCadastros e segurança de texto');
+  await pagina.evaluate(() => window.ir('louvores'));
+  await pagina.waitForTimeout(400);
+  await pagina.evaluate(() => window.modalLouvor());
+  await pagina.waitForTimeout(400);
+  await pagina.locator('#f-nome').fill("Ana D'Ávila <script>");
+  await pagina.locator('#okBtn').click();
+  await pagina.waitForTimeout(800);
+  const tabela = await pagina.locator('table.tbl').first().textContent();
+  ok('nome com apóstrofo e tag é exibido sem quebrar o HTML', tabela.includes("D'Ávila"));
+  ok('nada foi injetado como elemento', (await pagina.locator('table.tbl script').count()) === 0);
+
+  await pagina.evaluate(() => window.ir('painel'));
+  await pagina.waitForTimeout(400);
+  await pagina.evaluate(() => window.modalAviso());
+  await pagina.waitForTimeout(400);
+  await pagina.locator('#av-tit').fill('Ensaio extra');
+  await pagina.locator('#av-txt').fill('Sábado às 15h.');
+  await pagina.locator('#avOk').click();
+  await pagina.waitForTimeout(800);
+  ok('publica aviso no mural', (await pagina.evaluate(() => D.avisos.length)) === 1);
+
+  console.log('\nPersistência');
+  const antes = await pagina.evaluate(() => ({ l: D.louvores.length, a: D.avisos.length, c: D.cultos.length }));
+  await pagina.reload({ waitUntil: 'networkidle' });
+  await pagina.waitForTimeout(1600);
+  const off3 = pagina.getByRole('button', { name: /Usar dados deste aparelho/i });
+  if (await off3.count()) { await off3.click(); await pagina.waitForTimeout(1000); }
+  const depois = await pagina.evaluate(() => ({ l: D.louvores.length, a: D.avisos.length, c: D.cultos.length }));
+  ok('os dados sobrevivem ao recarregamento', JSON.stringify(antes) === JSON.stringify(depois),
+    `${JSON.stringify(antes)} → ${JSON.stringify(depois)}`);
+
+  console.log('\nCelular e painel do membro');
+  const celular = await contexto.newPage();
+  celular.on('pageerror', e => erros.push('erro de página (celular): ' + e.message));
+  await celular.route('**/rest/v1/**', r => r.abort());
+  await celular.setViewportSize({ width: 390, height: 844 });
+  await abrirEEntrar(celular);
+  ok('funciona na tela do celular', await celular.locator('#app').isVisible());
+  ok('mostra a navegação inferior', await celular.locator('.bottomnav').isVisible());
+
+  await celular.evaluate(() => window.sair());
+  await celular.waitForTimeout(300);
+  await celular.locator('#cfBtn').click();          // confirma a saída
+  await celular.waitForTimeout(700);
+  ok('sair leva ao login, não à página de vendas', await celular.locator('#login').isVisible());
+
+  const perfil = celular.locator('.member-login-card').first();
+  ok('lista os perfis dos membros', (await perfil.count()) > 0);
+  if (await perfil.count()) {
+    const pin = await celular.evaluate(() => {
+      const ativos = D.membros.filter(m => m.status === 'ativo')
+        .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+      return ativos[0] && ativos[0].pin;
+    });
+    await perfil.click();
+    await celular.waitForTimeout(500);
+    if (await celular.locator('#mb-pin').count()) {
+      await celular.locator('#mb-pin').fill(String(pin));
+      await celular.locator('#mbOk').click();
+      await celular.waitForTimeout(800);
+    }
+    ok('o membro entra no próprio painel', await celular.locator('#app').isVisible());
+  }
+
+  console.log('\nErros de JavaScript');
+  ok('nenhum erro no console', erros.length === 0, erros.join(' | '));
+} catch (e) {
+  falhas++;
+  console.log(`\n✗ o teste parou com uma exceção: ${e.message}`);
+} finally {
+  await navegador.close();
+  servidor.close();
+}
+
+console.log(falhas ? `\n${falhas} verificação(ões) falharam.\n` : '\nTudo certo.\n');
+process.exit(falhas ? 1 : 0);

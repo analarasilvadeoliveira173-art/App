@@ -83,6 +83,31 @@ Configurações mostra em que modo você está.
 
 ---
 
+## Testes
+
+```bash
+npm install
+npx playwright install chromium   # só na primeira vez
+npm test
+```
+
+São duas suítes, e as duas rodam no GitHub Actions a cada push e pull request
+([`.github/workflows/ci.yml`](.github/workflows/ci.yml)):
+
+- `npm run test:static` — arquivos obrigatórios, JSON válido, sintaxe do
+  JavaScript do app e do service worker, e coerência entre `capacitor.config.json`,
+  o manifest e o HTML.
+- `npm run test:e2e` — abre o app no Chromium **com o Supabase bloqueado** e
+  percorre os caminhos que precisam funcionar quando a internet falha: tela de
+  erro e recuperação, login de líder e de membro, sessão persistente, troca de
+  tema, todas as telas, montagem de escala, regras de senha, cadastros,
+  persistência após recarregar e layout de celular.
+
+Ambas terminam com código de saída diferente de zero quando algo quebra, então
+uma regressão reprova o CI em vez de passar despercebida.
+
+---
+
 ## Gerar o APK (Android)
 
 Requisitos: Node.js 18+, JDK 17 e Android Studio (ou o SDK do Android).
@@ -114,6 +139,9 @@ www/
   icone.svg             ícone do app
 supabase/
   schema.sql            tabelas, índices e políticas de segurança
+tests/
+  verifica-estatico.mjs verificações que não precisam de navegador
+  e2e.mjs               testes de ponta a ponta no Chromium
 capacitor.config.json   configuração do app nativo
 ```
 
