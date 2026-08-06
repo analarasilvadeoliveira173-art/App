@@ -1326,6 +1326,11 @@ const DB_REMOTO = {
 let DB = MODO_NUVEM ? DB_REMOTO : DB_LOCAL;
 let usandoDadosLocais = !MODO_NUVEM;
 function usarDadosLocais(){ DB = DB_LOCAL; usandoDadosLocais = true; }
+/* Estamos falando com o servidor de verdade, ou só com este aparelho? */
+function naNuvem(){ return MODO_NUVEM && !usandoDadosLocais; }
+/* Quatro dígitos são dez mil combinações — pouco demais para segurar
+   alguém insistindo. O servidor recusa menos que isto. */
+const SENHA_MINIMA = 6;
 
 /* ---------- Estado global ---------- */
 const D = {usuarios:[],membros:[],funcoes:[],membros_funcoes:[],louvores:[],cultos:[],culto_louvores:[],escalas:[],ensaios:[],ensaio_louvores:[],presencas:[],sugestoes_louvores:[],indisponibilidades:[],avisos:[]};
@@ -2562,19 +2567,22 @@ function modalMembro(id){
     <div class="row2"><div class="field"><label for="m-tel">Telefone (WhatsApp)</label><input id="m-tel" class="input" value="${esc(m.telefone||'')}" placeholder="73 99999-0000"></div>
       <div class="field"><label for="m-princ">Função principal</label><select id="m-princ" class="select">${opts(funcoesUI.map(f=>f.nome),normalizaFuncaoCadastro(m.funcao_principal),'Selecione')}</select></div></div>
     <div class="field"><label>Outras funções</label><div class="chk-grid" id="m-funcs">${funcoesUI.map(f=>`<label class="chk ${fids.has(f.id)?'on':''}"><input type="checkbox" value="${f.id}" ${fids.has(f.id)?'checked':''} onchange="this.closest('.chk').classList.toggle('on',this.checked)">${esc(f.nome)}</label>`).join('')}</div><div class="hint">Marque todas as funções que esse membro pode exercer. A escala será montada com base nisso.</div></div>
-    <div class="row2"><div class="field"><label for="m-pin">Senha de acesso ${id?'':'*'}</label><input id="m-pin" class="input" type="password" autocomplete="new-password" placeholder="${id?(m.pin?'Deixe em branco para manter':'Defina uma senha'):'4 a 6 dígitos'}" maxlength="6"></div>
+    <div class="row2">${naNuvem()?'':`<div class="field"><label for="m-pin">Senha de acesso ${id?'':'*'}</label><input id="m-pin" class="input" type="password" autocomplete="new-password" placeholder="${id?(m.pin?'Deixe em branco para manter':'Defina uma senha'):'Mínimo de '+SENHA_MINIMA+' caracteres'}"></div>`}
       <div class="field"><label for="m-entrada">Entrou em</label><input id="m-entrada" class="input" type="date" value="${esc(m.data_entrada||'')}"></div></div>
+    ${naNuvem()?`<div class="hint">O login desta pessoa é criado à parte, no botão <b>Gerar acesso</b> — a senha fica guardada embaralhada no servidor, não aqui na ficha.</div>`:''}
     <div class="field"><label>Cor do avatar</label><div style="display:flex;gap:8px;flex-wrap:wrap">${CORES.map(c=>`<label style="cursor:pointer"><input type="radio" name="cor" value="${c}" ${cor===c?'checked':''} style="display:none" onchange="document.querySelectorAll('[data-sw]').forEach(s=>s.style.outline='none');this.nextElementSibling.style.outline='3px solid var(--ink)'"><span data-sw style="display:block;width:30px;height:30px;border-radius:50%;background:${c};outline:${cor===c?'3px solid var(--ink)':'none'};outline-offset:2px"></span></label>`).join('')}</div></div>
     <div class="field"><label for="m-status">Status</label><select id="m-status" class="select">${opts([{v:'ativo',t:'Ativo'},{v:'inativo',t:'Inativo'}],m.status||'ativo')}</select></div>
     <div class="field"><label for="m-obs">Observações</label><textarea id="m-obs" class="input">${esc(m.observacoes||'')}</textarea></div>`,
     `${id&&user.papel==='admin'?`<button class="btn" onclick="gerarAcesso('${id}')">Gerar acesso</button>`:''}<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" id="okBtn">${id?'Salvar':'Adicionar'}</button>`);
   document.getElementById('okBtn').onclick=async()=>{
     const nome=val('m-nome'); if(!nome){toast('Informe o nome.','bad');return;}
-    const pin=val('m-pin');
-    /* A pessoa entra digitando o próprio nome e esta senha, então ela é
-       obrigatória em cadastros novos — sem ela ninguém consegue acessar. */
-    if(!id&&!pin){toast('Defina uma senha de acesso para esta pessoa.','bad');return;}
-    if(pin&&pin.length<4){toast('A senha precisa ter pelo menos 4 caracteres.','bad');return;}
+    /* Só no modo aparelho a senha mora na ficha. Na nuvem ela nunca passa
+       por aqui: quem guarda é o servidor, e o login é criado à parte. */
+    const pin=naNuvem()?'':val('m-pin');
+    if(!naNuvem()){
+      if(!id&&!pin){toast('Defina uma senha de acesso para esta pessoa.','bad');return;}
+      if(pin&&pin.length<SENHA_MINIMA){toast(`A senha precisa ter pelo menos ${SENHA_MINIMA} caracteres.`,'bad');return;}
+    }
     const corSel=(document.querySelector('input[name=cor]:checked')||{}).value||CORES[0];
     const dados={nome,telefone:val('m-tel')||null,funcao_principal:val('m-princ')||null,data_entrada:rawVal('m-entrada')||null,cor_avatar:corSel,status:rawVal('m-status'),observacoes:val('m-obs')||null};
     if(pin) dados.pin=pin;
@@ -2592,12 +2600,31 @@ function historico(id){ const m=membro(id); if(!m) return;
   modal('Histórico — '+m.nome, rows.length? rows.map(({e,c})=>{const p=presencaDe(id,{culto_id:c.id});return `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)"><div><b style="font-weight:600">${fmtData(c.data)}</b><div style="font-size:var(--t-1);color:var(--muted)">${esc(c.tipo||'Culto')} · ${esc(displayFuncao(e.funcao))}</div></div>${chip(STATUS_PRES,p?p.status:'pendente')}</div>`;}).join('') : `<p style="color:var(--muted);font-size:var(--t0)">Sem participações registradas ainda.</p>`,
     `<button class="btn btn-primary" onclick="closeModal()">Fechar</button>`);
 }
+/* Senha inicial fácil de ditar no grupo e de digitar no celular, mas longa
+   o bastante para não ser adivinhada em algumas tentativas. */
+function senhaInicial(){
+  const s='23456789abcdefghjkmnpqrstuvwxyz';   // sem 0/O e 1/l, que confundem
+  return Array.from(crypto.getRandomValues(new Uint8Array(8)),b=>s[b%s.length]).join('');
+}
 async function gerarAcesso(id){ const m=membro(id);
   if(D.usuarios.some(u=>u.membro_id===id)){ toast('Esse membro já tem acesso.','bad'); return; }
   let base=(m.nome||'membro').split(' ')[0].toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g,'')||'membro'; let u=base,n=1;
   while(D.usuarios.some(x=>x.usuario===u)) u=base+(++n);
-  const pin=m.pin||String(Math.floor(1000+Math.random()*9000));
-  try{ await DB.insert('usuarios',{nome:m.nome,usuario:u,pin,papel:'membro',membro_id:id,ativo:true}); await carregar(); closeModal(); toast('Acesso criado — usuário: '+u+' · PIN: '+pin); }catch(e){toast('Erro ao criar acesso.','bad');}
+  const senha=senhaInicial();
+  try{
+    if(naNuvem()) await chamarAcesso({acao:'criar_acesso',nome:m.nome,usuario:u,senha,papel:'membro',membro_id:id},true);
+    else await DB.insert('usuarios',{nome:m.nome,usuario:u,pin:senha,papel:'membro',membro_id:id,ativo:true});
+    await carregar(); closeModal();
+    /* A senha só aparece agora: depois daqui nem o administrador consegue
+       lê-la de volta, só definir outra. */
+    modal('Acesso criado para '+esc(m.nome),`
+      <p style="color:var(--muted);font-size:var(--t0);margin-top:0">Mande estes dados para a pessoa. Esta é a única vez que a senha aparece.</p>
+      <div class="kv"><span>Código da igreja</span><b>${esc(nuvem.codigo||'—')}</b></div>
+      <div class="kv"><span>Entra digitando</span><b>${esc(m.nome)}</b></div>
+      <div class="kv"><span>Senha</span><b style="font-family:var(--fonte-ui);letter-spacing:.06em">${esc(senha)}</b></div>
+      <div class="hint" style="margin-top:var(--e3)">Ela pode trocar a senha em <b>Meu perfil</b> assim que entrar.</div>`,
+      `<button class="btn btn-primary" onclick="closeModal()">Entendi</button>`);
+  }catch(e){ toast(e.message||'Erro ao criar acesso.','bad'); }
 }
 function excluirMembro(id){
   const m=membro(id); if(!m) return;
@@ -2668,25 +2695,43 @@ function renderPerfil(){
         <div class="kv"><span>Status</span><b>${m.status==='ativo'?'<span class="chip chip-ok">Ativo</span>':'<span class="chip chip-muted">Inativo</span>'}</b></div>`:`<div class="kv"><span>Usuário</span><b>${esc(user.usuario||'—')}</b></div>`}
       </div>
       <div class="card card-pad">
-        <div class="section-title" style="margin-top:0;font-size:var(--t1)">Alterar PIN / senha</div>
-        <p style="color:var(--muted);font-size:var(--t0);margin-top:0">Este PIN é pedido ao entrar pelo seu perfil na tela inicial. Se houver um usuário de líder/admin vinculado a você, a senha dele também é atualizada.</p>
-        <div class="field"><label for="pf-pin">Novo PIN / senha</label><input id="pf-pin" class="input" type="password" placeholder="Digite o novo PIN"></div>
-        <div class="field"><label for="pf-pin2">Confirmar PIN / senha</label><input id="pf-pin2" class="input" type="password" placeholder="Repita o PIN"></div>
+        <div class="section-title" style="margin-top:0;font-size:var(--t1)">Alterar minha senha</div>
+        <p style="color:var(--muted);font-size:var(--t0);margin-top:0">É a senha que você digita ao entrar, junto com o código da igreja e o seu nome. Mínimo de ${SENHA_MINIMA} caracteres.</p>
+        <div class="field"><label for="pf-pin">Nova senha</label><input id="pf-pin" class="input" type="password" autocomplete="new-password" placeholder="Digite a nova senha"></div>
+        <div class="field"><label for="pf-pin2">Confirmar a nova senha</label><input id="pf-pin2" class="input" type="password" autocomplete="new-password" placeholder="Repita a senha"></div>
         <button class="btn btn-primary" onclick="salvarPinPerfil()">Salvar senha</button>
       </div>
     </div>`;
 }
 async function salvarPinPerfil(){
   const p1=val('pf-pin'), p2=val('pf-pin2');
-  if(!p1||!p2){toast('Informe e confirme o novo PIN.','bad');return;}
-  if(p1!==p2){toast('Os PINs não conferem.','bad');return;}
+  if(!p1||!p2){toast('Informe e confirme a nova senha.','bad');return;}
+  if(p1!==p2){toast('As senhas não conferem.','bad');return;}
+  if(p1.length<SENHA_MINIMA){toast(`A senha precisa ter pelo menos ${SENHA_MINIMA} caracteres.`,'bad');return;}
   try{
-    const u = D.usuarios.find(x=>x.usuario===user.usuario) || D.usuarios.find(x=>x.membro_id===user.membro_id&&x.papel===user.papel);
-    if(u){ await DB.update('usuarios',u.id,{pin:p1}); }
-    if(user.membro_id){ await DB.update('membros',user.membro_id,{pin:p1}); }
-    await carregar(); toast('Senha/PIN atualizado.');
+    if(naNuvem()){
+      /* Na nuvem a senha nunca passa pela tabela: quem guarda é o próprio
+         Supabase, embaralhada, e a troca vale para todos os aparelhos. */
+      const cracha = await tokenValido();
+      if(!cracha) throw new Error('Sua sessão expirou. Entre de novo.');
+      const r = await fetch(SUPABASE_URL+'/auth/v1/user',{
+        method:'PUT',
+        headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+cracha,'Content-Type':'application/json'},
+        body:JSON.stringify({password:p1})
+      });
+      if(!r.ok){
+        const d=await r.json().catch(()=>({}));
+        throw new Error(d.msg||d.error_description||'Não consegui trocar a senha agora.');
+      }
+    }else{
+      const u = D.usuarios.find(x=>x.usuario===user.usuario) || D.usuarios.find(x=>x.membro_id===user.membro_id&&x.papel===user.papel);
+      if(u){ await DB.update('usuarios',u.id,{pin:p1}); }
+      if(user.membro_id){ await DB.update('membros',user.membro_id,{pin:p1}); }
+      await carregar();
+    }
+    toast('Senha atualizada.');
     const a=document.getElementById('pf-pin'), b=document.getElementById('pf-pin2'); if(a)a.value=''; if(b)b.value='';
-  }catch(e){console.error(e);toast('Erro ao alterar PIN.','bad');}
+  }catch(e){console.error(e);toast(e.message||'Erro ao alterar a senha.','bad');}
 }
 
 /* ===================== USUÁRIOS ===================== */
@@ -2705,30 +2750,62 @@ function renderUsuarios(){
         </div></td></tr>`).join('')}
     </tbody></table></div></div>`;
 }
+/* Na nuvem, criar login não é gravar uma linha: é abrir uma conta de
+   verdade no servidor, com a senha embaralhada. Quem faz isso é a função
+   de acessos — a tabela sozinha geraria um cadastro que não entra. */
 function modalUsuario(id){
   const u=id?D.usuarios.find(x=>x.id===id):{};
   modal(id?'Editar usuário':'Novo usuário',`
     <div class="field"><label for="u-nome">Nome *</label><input id="u-nome" class="input" value="${esc(u.nome||'')}"></div>
-    <div class="row2"><div class="field"><label for="u-user">Usuário *</label><input id="u-user" class="input" value="${esc(u.usuario||'')}" placeholder="login"></div>
-      <div class="field"><label for="u-pin">PIN / senha ${id?'':'*'}</label><input id="u-pin" class="input" type="password" autocomplete="new-password" placeholder="${id?'Deixe em branco para manter':'Mínimo de 4 caracteres'}"></div></div>
+    <div class="row2"><div class="field"><label for="u-user">Usuário *</label>
+      <input id="u-user" class="input" value="${esc(u.usuario||'')}" placeholder="login" ${id?'disabled':''}>
+      ${id?'<div class="hint">O login não muda depois de criado.</div>':''}</div>
+      <div class="field"><label for="u-pin">Senha ${id?'':'*'}</label><input id="u-pin" class="input" type="password" autocomplete="new-password" placeholder="${id?'Deixe em branco para manter':'Mínimo de '+SENHA_MINIMA+' caracteres'}"></div></div>
     <div class="field"><label for="u-papel">Papel</label><select id="u-papel" class="select">${opts([{v:'admin',t:'Administrador'},{v:'lider',t:'Líder'},{v:'membro',t:'Membro'}],u.papel||'lider')}</select></div>
     <div class="field"><label for="u-membro">Vincular a um membro (opcional)</label><select id="u-membro" class="select">${opts(D.membros.map(m=>({v:m.id,t:m.nome})),u.membro_id||'','Nenhum')}</select></div>
-    <label class="chk" style="display:inline-flex"><input type="checkbox" id="u-ativo" ${u.ativo!==false?'checked':''}> Ativo</label>`,
+    <label class="chk" style="display:inline-flex"><input type="checkbox" id="u-ativo" ${u.ativo!==false?'checked':''}> Ativo</label>
+    <div class="hint" style="margin-top:var(--e3)">A pessoa entra digitando o <b>código da igreja</b>, o próprio nome e essa senha.</div>`,
     `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" id="okBtn">${id?'Salvar':'Adicionar'}</button>`);
   document.getElementById('okBtn').onclick=async()=>{
-    const nome=val('u-nome'),usuario=val('u-user'),pin=val('u-pin');
+    const btn=document.getElementById('okBtn');
+    const nome=val('u-nome'),usuario=id?(u.usuario||''):val('u-user'),pin=val('u-pin');
     if(!nome||!usuario){toast('Preencha o nome e o usuário.','bad');return;}
-    if(!id&&!pin){toast('Defina um PIN para o novo acesso.','bad');return;}
-    if(pin&&pin.length<4){toast('O PIN precisa ter pelo menos 4 caracteres.','bad');return;}
+    if(!id&&!pin){toast('Defina uma senha para o novo acesso.','bad');return;}
+    if(pin&&pin.length<SENHA_MINIMA){toast(`A senha precisa ter pelo menos ${SENHA_MINIMA} caracteres.`,'bad');return;}
     if(D.usuarios.some(x=>(x.usuario||'').toLowerCase()===usuario.toLowerCase()&&x.id!==id)){toast('Esse usuário já existe.','bad');return;}
-    const dados={nome,usuario,papel:rawVal('u-papel'),membro_id:rawVal('u-membro')||null,ativo:document.getElementById('u-ativo').checked};
-    /* Em branco na edição significa "não mexer na senha atual". */
-    if(pin) dados.pin=pin;
-    try{ if(id)await DB.update('usuarios',id,dados); else await DB.insert('usuarios',dados); closeModal(); await carregar(); toast(id?'Usuário salvo.':'Usuário criado.'); renderUsuarios(); }catch(e){toast('Erro ao salvar.','bad');}
+    const papel=rawVal('u-papel'), membro_id=rawVal('u-membro')||null;
+    const ativo=document.getElementById('u-ativo').checked;
+
+    btn.disabled=true; btn.textContent='Salvando…';
+    try{
+      if(naNuvem()){
+        if(id){
+          await chamarAcesso({acao:'atualizar_acesso',usuario_id:id,nome,papel,membro_id,ativo},true);
+          if(pin) await chamarAcesso({acao:'trocar_senha',usuario_id:id,senha:pin},true);
+        }else{
+          await chamarAcesso({acao:'criar_acesso',nome,usuario,senha:pin,papel,membro_id},true);
+        }
+      }else{
+        const dados={nome,usuario,papel,membro_id,ativo};
+        /* Em branco na edição significa "não mexer na senha atual". */
+        if(pin) dados.pin=pin;
+        if(id) await DB.update('usuarios',id,dados); else await DB.insert('usuarios',dados);
+      }
+      closeModal(); await carregar(); toast(id?'Usuário salvo.':'Usuário criado.'); renderUsuarios();
+    }catch(e){
+      btn.disabled=false; btn.textContent=id?'Salvar':'Adicionar';
+      toast(e.message||'Erro ao salvar.','bad');
+    }
   };
 }
 function excluirUsuario(id){ const u=D.usuarios.find(x=>x.id===id); if(!u) return; if(u.usuario==='admin'){toast('Não é possível excluir o admin.','bad');return;}
-  confirmar(`Excluir o acesso de ${u.nome}?`, async()=>{ await DB.remove('usuarios',id); await carregar(); toast('Usuário excluído.'); renderUsuarios(); }); }
+  confirmar(`Excluir o acesso de ${u.nome}?`, async()=>{
+    try{
+      if(naNuvem()) await chamarAcesso({acao:'remover_acesso',usuario_id:id},true);
+      else await DB.remove('usuarios',id);
+      await carregar(); toast('Usuário excluído.'); renderUsuarios();
+    }catch(e){ toast(e.message||'Não consegui excluir.','bad'); }
+  }); }
 
 /* ===================== CONFIGURAÇÕES DA IGREJA ===================== */
 function renderConfiguracoes(){
@@ -2939,13 +3016,18 @@ function procurarAcesso(identificador){
    trocar senha — passa por aqui. A chave secreta fica no servidor. */
 const ACESSO_URL = SUPABASE_URL+'/functions/v1/acesso';
 
-async function chamarAcesso(corpo, token){
+async function chamarAcesso(corpo, comCracha){
+  let cracha = SUPABASE_KEY;
+  if(comCracha){
+    cracha = await tokenValido();
+    if(!cracha) throw new Error('Sua sessão expirou. Entre de novo.');
+  }
   let r;
   try{
     r = await fetch(ACESSO_URL,{
       method:'POST',
       headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json',
-               Authorization:'Bearer '+(token||SUPABASE_KEY)},
+               Authorization:'Bearer '+cracha},
       body:JSON.stringify(corpo)
     });
   }catch(e){ throw new Error('Sem conexão agora. Tente de novo em instantes.'); }

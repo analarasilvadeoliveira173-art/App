@@ -153,20 +153,25 @@ try {
   await pagina.waitForTimeout(400);
   await pagina.evaluate(() => window.modalUsuario(D.usuarios.find(x => x.usuario === 'joao').id));
   await pagina.waitForTimeout(400);
-  ok('o campo de PIN não expõe a senha atual', (await pagina.locator('#u-pin').inputValue()) === '');
+  ok('o campo de senha não expõe a senha atual', (await pagina.locator('#u-pin').inputValue()) === '');
+  ok('o login não pode ser trocado depois de criado', await pagina.locator('#u-user').isDisabled());
   await pagina.locator('#u-nome').fill('João Pereira Editado');
   await pagina.locator('#okBtn').click();
   await pagina.waitForTimeout(800);
   const usuarioDepois = await pagina.evaluate(() => D.usuarios.find(u => u.usuario === 'joao'));
   ok('salva a edição', usuarioDepois.nome === 'João Pereira Editado');
-  ok('PIN em branco mantém a senha', usuarioDepois.pin === pinAntes, `${pinAntes} → ${usuarioDepois.pin}`);
+  ok('senha em branco mantém a senha atual', usuarioDepois.pin === pinAntes, `${pinAntes} → ${usuarioDepois.pin}`);
 
   await pagina.evaluate(() => window.modalUsuario(D.usuarios.find(x => x.usuario === 'joao').id));
   await pagina.waitForTimeout(400);
-  await pagina.locator('#u-pin').fill('12');
+  await pagina.locator('#u-pin').fill('12345');
   await pagina.locator('#okBtn').click();
   await pagina.waitForTimeout(500);
-  ok('recusa PIN com menos de 4 caracteres', (await pagina.locator('#ov').count()) > 0);
+  ok('recusa senha com menos de 6 caracteres', (await pagina.locator('#ov').count()) > 0);
+  await pagina.locator('#u-pin').fill('senha-boa-2026');
+  await pagina.locator('#okBtn').click();
+  await pagina.waitForTimeout(800);
+  ok('aceita senha de 6 caracteres ou mais', (await pagina.locator('#ov').count()) === 0);
   await pagina.evaluate(() => window.closeModal());
 
   console.log('\nCadastros e segurança de texto');
