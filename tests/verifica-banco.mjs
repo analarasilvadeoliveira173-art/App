@@ -14,6 +14,7 @@ import { execFileSync, execSync } from 'node:child_process';
 import { createServer } from 'node:net';
 import { writeFileSync, rmSync, mkdirSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { userInfo } from 'node:os';
 import { dirname, join } from 'node:path';
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -47,9 +48,15 @@ if (!BIN) {
   process.exit(0);
 }
 
+// Quem roda o initdb vira o superusuário do cluster. Como root não pode
+// rodá-lo, aí o dono passa a ser "postgres"; em qualquer outro caso é o
+// próprio usuário da máquina — no GitHub, "runner".
+const EH_ROOT = !!(process.getuid && process.getuid() === 0);
+const DONO = EH_ROOT ? 'postgres' : userInfo().username;
+
 function psql(args, banco = 'postgres') {
   return execFileSync(join(BIN, 'psql'),
-    ['-h', SOCKET, '-p', String(PORTA), '-U', 'postgres', '-d', banco, ...args],
+    ['-h', SOCKET, '-p', String(PORTA), '-U', DONO, '-d', banco, ...args],
     { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 }
 
@@ -60,12 +67,11 @@ try {
   try { execSync(`${BIN}/pg_ctl -D ${DADOS} stop -m immediate`, { stdio: 'ignore' }); } catch {}
   rmSync(DADOS, { recursive: true, force: true });
   mkdirSync(DADOS, { recursive: true });
-  const comoPostgres = process.getuid && process.getuid() === 0 ? 'su postgres -c ' : '';
-  if (comoPostgres) execSync(`chown -R postgres:postgres ${DADOS}`, { stdio: 'ignore' });
+  if (EH_ROOT) execSync(`chown -R postgres:postgres ${DADOS}`, { stdio: 'ignore' });
   const cmd = `${BIN}/initdb -D ${DADOS} -A trust --locale=C --encoding=UTF8`;
-  execSync(comoPostgres ? `su postgres -c "${cmd}"` : cmd, { stdio: 'ignore' });
+  execSync(EH_ROOT ? `su postgres -c "${cmd}"` : cmd, { stdio: 'ignore' });
   const up = `${BIN}/pg_ctl -D ${DADOS} -o "-p ${PORTA} -k ${SOCKET}" -l /tmp/pg-ekklesia.log start -w`;
-  execSync(comoPostgres ? `su postgres -c '${up}'` : up, { stdio: 'ignore' });
+  execSync(EH_ROOT ? `su postgres -c '${up}'` : up, { stdio: 'ignore' });
   ok('PostgreSQL de teste no ar', true);
 } catch (e) {
   console.log('  ⚠ não consegui subir o PostgreSQL — teste do banco pulado.');
@@ -136,12 +142,13 @@ grant execute on all functions in schema auth to anon, authenticated;
   }
 } catch (e) {
   falhas++;
-  console.log('  ✗ o teste do banco parou: ' + String(e.message).split('\n')[0]);
+  // O stderr é o que diz o motivo; a mensagem sozinha só repete o comando.
+  const motivo = String(e.stderr || '').trim() || String(e.message).split('\n')[0];
+  console.log('  ✗ o teste do banco parou: ' + motivo);
 } finally {
   try {
-    const comoPostgres = process.getuid && process.getuid() === 0 ? 'su postgres -c ' : '';
     const down = `${BIN}/pg_ctl -D ${DADOS} stop -m immediate`;
-    execSync(comoPostgres ? `su postgres -c '${down}'` : down, { stdio: 'ignore' });
+    execSync(EH_ROOT ? `su postgres -c '${down}'` : down, { stdio: 'ignore' });
   } catch {}
 }
 
