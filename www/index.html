@@ -3054,6 +3054,13 @@ async function chamarAcesso(corpo, comCracha){
     });
   }catch(e){ throw new Error('Sem conexão agora. Tente de novo em instantes.'); }
   const dados = await r.json().catch(()=>({}));
+  /* 404 aqui quer dizer que a função de acessos não foi publicada neste
+     projeto do Supabase. Sem essa dica a pessoa fica tentando a senha
+     achando que errou, quando na verdade falta um passo na instalação. */
+  if(r.status===404 || r.status===503){
+    throw new Error('A parte do servidor ainda não foi publicada nesta igreja. '
+      +'Quem instalou precisa publicar a função de acessos (docs/configurar-supabase.md, Passo 4).');
+  }
   if(!r.ok) throw new Error(dados.erro || 'Não consegui completar essa ação agora.');
   return dados;
 }
