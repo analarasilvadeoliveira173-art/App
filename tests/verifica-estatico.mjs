@@ -66,6 +66,20 @@ for (const icone of manifesto.icons || []) {
   ok(`ícone ${icone.src} existe`, existsSync(join(RAIZ, 'www', icone.src)));
 }
 
+console.log('\nSistema visual');
+const tokens = ['--t0','--t3','--t5','--e3','--e6','--r-md','--r-xl','--sombra-2','--fonte-display','--fonte-ui'];
+for (const t of tokens) ok(`token ${t} definido`, html.includes(`${t}:`), 'ausente no :root');
+ok('as duas famílias de fonte são carregadas',
+  /Instrument\+Serif/.test(html) && /DM\+Sans/.test(html));
+ok('nenhuma referência sobrou à fonte antiga', !html.includes('Manrope'));
+
+// O sistema degrada se cada tela voltar a inventar seu próprio tamanho.
+const tamanhos = new Set((html.match(/font-size:[0-9.]+px/g) || []));
+ok(`no máximo 16 tamanhos de fonte fixos (há ${tamanhos.size})`, tamanhos.size <= 16,
+  [...tamanhos].sort().join(' '));
+const raios = new Set((html.match(/border-radius:[0-9]+px/g) || []));
+ok(`no máximo 10 raios fixos (há ${raios.size})`, raios.size <= 10, [...raios].sort().join(' '));
+
 console.log('\nHTML');
 ok('idioma declarado como pt-BR', /<html[^>]+lang="pt-BR"/.test(html));
 ok('viewport definido', /<meta[^>]+name="viewport"/.test(html));

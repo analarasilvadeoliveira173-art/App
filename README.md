@@ -169,6 +169,27 @@ procurar a liderança.
 
 ---
 
+## Sistema visual
+
+O CSS tinha 25 tamanhos de fonte, 15 raios e 26 espaçamentos diferentes
+espalhados pelo arquivo — o que fazia cada tela parecer de um app diferente.
+Hoje tudo passa por escalas declaradas no `:root` do `www/index.html`:
+
+| | |
+|---|---|
+| Tipografia | `--t-2` a `--t6`, razão ~1,2 |
+| Espaçamento | `--e1` a `--e9`, base 4px |
+| Raios | `--r-sm`, `--r-md`, `--r-lg`, `--r-xl`, `--r-full` |
+| Elevação | `--sombra-1`, `--sombra-2`, `--sombra-3` |
+| Fontes | `--fonte-display` (Instrument Serif) e `--fonte-ui` (DM Sans) |
+
+A serifa aparece só nos títulos e nos números grandes, onde o contraste dela
+tem espaço para render; a sans carrega todo o resto da interface.
+
+Os testes estáticos reprovam se alguém voltar a escrever tamanhos ou raios
+fixos fora dessas escalas — é o que impede o sistema de se desfazer com o
+tempo.
+
 ## Personalização
 
 Em **Configurações → Identidade da igreja** dá para trocar nome do aplicativo,
