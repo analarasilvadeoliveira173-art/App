@@ -1085,6 +1085,9 @@ function lerSessao(){
 /* A sessão só vale se o acesso ainda existir e continuar ativo no banco. */
 function sessaoAindaValida(s){
   if(!s) return false;
+  /* Na nuvem quem responde por isso é o crachá, que o servidor recusa se o
+     acesso foi desativado. A tabela de acessos nem é visível para membro. */
+  if(MODO_NUVEM && !usandoDadosLocais) return !!nuvem.token;
   if(s.papel==='membro' && s.membro_id){
     const m=membro(s.membro_id);
     return !!(m && m.status==='ativo');
@@ -1097,6 +1100,11 @@ function restaurarSessao(){
   /* Na nuvem, quem manda é o crachá: sem ele, é preciso entrar de novo. */
   if(MODO_NUVEM && !usandoDadosLocais && !nuvem.token){ limparSessao(); return false; }
   if(!s || !sessaoAindaValida(s)){ limparSessao(); return false; }
+  if(MODO_NUVEM && !usandoDadosLocais){
+    user={nome:s.nome,usuario:s.usuario,papel:s.papel,membro_id:s.membro_id||null};
+    abrirApp();
+    return true;
+  }
   /* Recarrega nome e papel do banco: eles podem ter mudado desde o último acesso. */
   if(s.papel==='membro' && s.membro_id){
     const m=membro(s.membro_id);
@@ -2963,7 +2971,8 @@ async function entrarNaNuvem(codigo, nome, senha){
   guardarTokens(dados);
 
   const meta = (dados.user && dados.user.user_metadata) || {};
-  return { nome: meta.nome || nome, papel: meta.papel || 'membro' };
+  return { nome: meta.nome || nome, papel: meta.papel || 'membro',
+           membro_id: meta.membro_id || null, usuario: meta.usuario || null };
 }
 
 async function entrar(){
@@ -2975,14 +2984,11 @@ async function entrar(){
     const codigo = val('lg-igreja') || nuvem.codigo;
     if(!codigo){ toast('Digite o código da sua igreja.','bad'); focar('lg-igreja'); return; }
     try{
-      const quem = await entrarNaNuvem(codigo, identificador, senha);
+      /* Papel e vínculo vêm do crachá, não da tabela: um membro não lê mais
+         a lista de acessos, e ninguém vira líder editando o próprio cadastro. */
+      user={ nome:quem.nome, usuario:quem.usuario||identificador,
+             papel:quem.papel, membro_id:quem.membro_id };
       await carregar();
-      /* O papel vem do crachá, não da tabela: assim ninguém vira líder
-         editando o próprio cadastro. */
-      const meuUsuario = D.usuarios.find(u=>chaveNome(u.nome)===chaveNome(quem.nome))
-        || D.usuarios.find(u=>u.papel===quem.papel);
-      user={ nome:quem.nome, usuario:(meuUsuario&&meuUsuario.usuario)||identificador,
-             papel:quem.papel, membro_id:(meuUsuario&&meuUsuario.membro_id)||null };
       const pe=document.getElementById('lg-pin'); if(pe) pe.value='';
       abrirApp();
     }catch(e){

@@ -51,7 +51,11 @@ const servidor = createServer(async (req, res) => {
 await new Promise(r => servidor.listen(0, '127.0.0.1', r));
 const BASE = `http://127.0.0.1:${servidor.address().port}/index.html`;
 
-const navegador = await chromium.launch();
+// CHROMIUM_PATH permite usar um Chromium já instalado na máquina, quando o
+// que o Playwright baixaria não está disponível. Sem a variável, tudo segue
+// como antes.
+const navegador = await chromium.launch(
+  process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
 const contexto = await navegador.newContext({ viewport: { width: 1280, height: 900 } });
 const pagina = await contexto.newPage();
 pagina.on('pageerror', e => erros.push('erro de página: ' + e.message));

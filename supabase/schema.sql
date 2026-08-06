@@ -252,27 +252,116 @@ returns text language sql stable as $$
   );
 $$;
 
+-- Qual integrante é esta pessoa. É o que permite ao membro confirmar a
+-- própria presença sem poder mexer na dos outros.
+create or replace function public.meu_membro_id()
+returns text language sql stable as $$
+  select coalesce(
+    auth.jwt() -> 'user_metadata' ->> 'membro_id',
+    auth.jwt() -> 'app_metadata'  ->> 'membro_id'
+  );
+$$;
+
+create or replace function public.sou_lideranca()
+returns boolean language sql stable as $$
+  select public.meu_papel() in ('admin','lider');
+$$;
+
+create or replace function public.sou_admin()
+returns boolean language sql stable as $$
+  select public.meu_papel() = 'admin';
+$$;
+
+-- ------------------------------------------------------------
+-- Quem pode o quê
+--
+-- Até aqui a regra dizia apenas "é da minha igreja?". Isso separava
+-- uma igreja da outra, mas dentro da igreja liberava tudo para todos:
+-- as permissões viviam só na tela, e quem chamasse a API direto
+-- apagava cultos, escalas e repertório sendo um membro comum.
+--
+--   membro  → lê o ministério; escreve só o que é dele
+--   líder   → cuida do ministério inteiro
+--   admin   → cuida também dos acessos
+-- ------------------------------------------------------------
 do $$
-declare t text;
+declare
+  t text;
+  -- Conteúdo do ministério: todos leem, só a liderança altera.
+  conteudo text[] := array[
+    'funcoes','membros','membros_funcoes','louvores','cultos',
+    'culto_louvores','escalas','ensaios','ensaio_louvores','avisos'
+  ];
+  -- Registros pessoais: cada um cuida da própria linha.
+  pessoais text[] := array['presencas','indisponibilidades','sugestoes_louvores'];
+  -- Toda política que este arquivo cria precisa estar aqui, senão rodar
+  -- o schema uma segunda vez falha com "policy already exists".
+  antigas text[] := array['acesso_app','isolamento_por_igreja','leitura','escrita_lideranca',
+                          'escrita_propria','leitura_propria','acessos_admin',
+                          'auditoria_lideranca','auditoria_escrita'];
+  pol text;
 begin
-  foreach t in array array[
-    'funcoes','membros','usuarios','membros_funcoes','louvores','cultos',
-    'culto_louvores','escalas','ensaios','ensaio_louvores','presencas',
-    'sugestoes_louvores','indisponibilidades','avisos','auditoria'
-  ]
+  foreach t in array (conteudo || pessoais || array['usuarios','auditoria'])
   loop
     execute format('alter table public.%I enable row level security', t);
-    -- Limpa políticas de versões anteriores, inclusive a antiga que liberava tudo.
-    execute format('drop policy if exists "acesso_app" on public.%I', t);
-    execute format('drop policy if exists "isolamento_por_igreja" on public.%I', t);
+    foreach pol in array antigas loop
+      execute format('drop policy if exists %I on public.%I', pol, t);
+    end loop;
+  end loop;
+
+  -- ---------- Conteúdo do ministério ----------
+  foreach t in array conteudo
+  loop
     execute format($f$
-      create policy "isolamento_por_igreja" on public.%I
-        for all to authenticated
-        using      (igreja_id = public.minha_igreja())
-        with check  (igreja_id = public.minha_igreja())
+      create policy "leitura" on public.%I for select to authenticated
+        using (igreja_id = public.minha_igreja())
+    $f$, t);
+    execute format($f$
+      create policy "escrita_lideranca" on public.%I for all to authenticated
+        using      (igreja_id = public.minha_igreja() and public.sou_lideranca())
+        with check (igreja_id = public.minha_igreja() and public.sou_lideranca())
+    $f$, t);
+  end loop;
+
+  -- ---------- Presença, indisponibilidade e sugestão ----------
+  -- A equipe inteira precisa enxergar quem confirmou, mas ninguém
+  -- responde no lugar de outra pessoa.
+  foreach t in array pessoais
+  loop
+    execute format($f$
+      create policy "leitura" on public.%I for select to authenticated
+        using (igreja_id = public.minha_igreja())
+    $f$, t);
+    execute format($f$
+      create policy "escrita_propria" on public.%I for all to authenticated
+        using      (igreja_id = public.minha_igreja()
+                    and (public.sou_lideranca() or membro_id = public.meu_membro_id()))
+        with check (igreja_id = public.minha_igreja()
+                    and (public.sou_lideranca() or membro_id = public.meu_membro_id()))
     $f$, t);
   end loop;
 end $$;
+
+-- ---------- Acessos ----------
+-- Um membro enxerga apenas o próprio registro: a lista de quem é líder
+-- e de quem tem acesso é assunto da administração. Alterar acesso é só
+-- pela função do servidor, que confere papel antes.
+create policy "leitura_propria" on public.usuarios for select to authenticated
+  using (igreja_id = public.minha_igreja()
+         and (public.sou_lideranca() or auth_id = auth.uid()));
+
+create policy "acessos_admin" on public.usuarios for all to authenticated
+  using      (igreja_id = public.minha_igreja() and public.sou_admin())
+  with check (igreja_id = public.minha_igreja() and public.sou_admin());
+
+-- ---------- Histórico de alterações ----------
+-- Só a liderança lê, e ninguém apaga: registro que se apaga não serve
+-- para nada.
+create policy "auditoria_lideranca" on public.auditoria for select to authenticated
+  using (igreja_id = public.minha_igreja() and public.sou_lideranca());
+
+create policy "auditoria_escrita" on public.auditoria for insert to authenticated
+  with check (igreja_id = public.minha_igreja());
 
 -- A tabela de igrejas nunca é listada pelo aplicativo: cada pessoa
 -- só enxerga a linha da própria igreja, e só para leitura.
@@ -290,14 +379,6 @@ create policy "minha_igreja_leitura" on public.igrejas
 --    Ela não devolve nenhum dado da igreja: sem a senha correta,
 --    saber esse endereço não serve para nada.
 -- ============================================================
--- Endereço técnico usado só pelo sistema de login. Ninguém digita isso.
-create or replace function public.montar_email(p_codigo text, p_usuario text)
-returns text language sql immutable as $$
-  select lower(regexp_replace(unaccent_simples(p_usuario),'[^a-zA-Z0-9]+','.','g'))
-      || '@' || lower(regexp_replace(p_codigo,'[^a-zA-Z0-9]+','','g'))
-      || '.ekklesia.app';
-$$;
-
 -- Troca as letras acentuadas mais comuns do português. Evita depender
 -- da extensão unaccent, que nem todo projeto tem habilitada.
 create or replace function public.unaccent_simples(t text)
@@ -305,6 +386,14 @@ returns text language sql immutable as $$
   select translate(coalesce(t,''),
     'áàâãäéèêëíìîïóòôõöúùûüçÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇ',
     'aaaaaeeeeiiiiooooouuuucAAAAAEEEEIIIIOOOOOUUUUC');
+$$;
+
+-- Endereço técnico usado só pelo sistema de login. Ninguém digita isso.
+create or replace function public.montar_email(p_codigo text, p_usuario text)
+returns text language sql immutable as $$
+  select lower(regexp_replace(unaccent_simples(p_usuario),'[^a-zA-Z0-9]+','.','g'))
+      || '@' || lower(regexp_replace(p_codigo,'[^a-zA-Z0-9]+','','g'))
+      || '.ekklesia.app';
 $$;
 
 create or replace function public.email_de_acesso(p_codigo text, p_nome text)

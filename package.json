@@ -5,14 +5,15 @@
   "private": true,
   "scripts": {
     "start": "npx --yes serve www -l 5173",
-    "test": "npm run test:static && npm run test:e2e",
+    "test": "npm run test:static && npm run test:banco && npm run test:e2e",
     "test:static": "node tests/verifica-estatico.mjs",
     "test:e2e": "node tests/e2e.mjs",
     "cap:sync": "npx cap sync",
     "cap:android": "npx cap open android",
     "build:android": "npx cap sync android && cd android && ./gradlew assembleDebug",
     "build:android:release": "npx cap sync android && cd android && ./gradlew assembleRelease",
-    "build:teste": "node scripts/gerar-versao-teste.mjs"
+    "build:teste": "node scripts/gerar-versao-teste.mjs",
+    "test:banco": "node tests/verifica-banco.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.0",

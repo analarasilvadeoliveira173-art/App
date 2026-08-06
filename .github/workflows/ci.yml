@@ -30,6 +30,12 @@ jobs:
       - name: Verificações estáticas
         run: npm run test:static
 
+      # Sobe um PostgreSQL de mentira, aplica o schema de verdade e confere
+      # que uma igreja não alcança os dados de outra. Sem isso, um erro nas
+      # regras de acesso só apareceria depois de publicado.
+      - name: Isolamento entre igrejas
+        run: npm run test:banco
+
       - name: Instalar o Chromium
         run: npx playwright install --with-deps chromium
 

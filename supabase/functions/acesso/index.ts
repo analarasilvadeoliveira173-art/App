@@ -10,6 +10,7 @@
      criar_igreja   — só você, com a chave mestra (venda nova)
      criar_acesso   — o líder cria o login de um integrante
      trocar_senha   — o líder redefine a senha de alguém
+     atualizar_acesso — muda nome, papel ou vínculo (e o crachá junto)
      remover_acesso — o líder tira o acesso de alguém
 
    Publicar:  supabase functions deploy acesso --no-verify-jwt
@@ -99,7 +100,8 @@ Deno.serve(async (req) => {
     const email = montarEmail(codigoLimpo, usuario);
     const { data: criado, error: e2 } = await admin.auth.admin.createUser({
       email, password: admin_senha, email_confirm: true,
-      user_metadata: { igreja_id: igrejaId, papel: 'admin', nome: admin_nome ?? 'Administrador' },
+      user_metadata: { igreja_id: igrejaId, papel: 'admin', nome: admin_nome ?? 'Administrador',
+                       usuario, membro_id: null },
     });
     if (e2) {
       await admin.from('igrejas').delete().eq('id', igrejaId);
@@ -141,7 +143,8 @@ Deno.serve(async (req) => {
     const email = montarEmail(igreja.codigo, usuario);
     const { data: criado, error: e1 } = await admin.auth.admin.createUser({
       email, password: senha, email_confirm: true,
-      user_metadata: { igreja_id: igreja.id, papel: papel ?? 'membro', nome },
+      user_metadata: { igreja_id: igreja.id, papel: papel ?? 'membro', nome,
+                       usuario, membro_id: membro_id ?? null },
     });
     if (e1) return erro('Não consegui criar o acesso: ' + e1.message, 500);
 
@@ -171,6 +174,47 @@ Deno.serve(async (req) => {
 
     const { error } = await admin.auth.admin.updateUserById(alvo.auth_id, { password: senha });
     if (error) return erro('Não consegui trocar a senha: ' + error.message, 500);
+    return responder({ ok: true });
+  }
+
+  /* O crachá carrega papel e vínculo. Mudar isso só na tabela deixaria a
+     permissão antiga valendo até a pessoa sair e entrar de novo. */
+  if (acao === 'atualizar_acesso') {
+    const { usuario_id, nome, papel, membro_id, ativo } = corpo;
+    if (!usuario_id) return erro('Informe qual acesso atualizar.');
+
+    const { data: alvo } = await admin.from('usuarios')
+      .select('auth_id,papel,usuario').eq('id', usuario_id).eq('igreja_id', igreja.id).maybeSingle();
+    if (!alvo) return erro('Acesso não encontrado nesta igreja.', 404);
+    if (alvo.papel === 'admin' && chamador.papel !== 'admin') {
+      return erro('Só um administrador altera outro administrador.', 403);
+    }
+    if (papel === 'admin' && chamador.papel !== 'admin') {
+      return erro('Só um administrador promove alguém a administrador.', 403);
+    }
+    if (alvo.usuario === 'admin' && papel && papel !== 'admin') {
+      return erro('O acesso principal precisa continuar sendo administrador.');
+    }
+
+    const mudancas: Record<string, unknown> = {};
+    if (nome !== undefined) mudancas.nome = nome;
+    if (papel !== undefined) mudancas.papel = papel;
+    if (membro_id !== undefined) mudancas.membro_id = membro_id || null;
+    if (ativo !== undefined) mudancas.ativo = !!ativo;
+    if (Object.keys(mudancas).length) {
+      const { error } = await admin.from('usuarios')
+        .update(mudancas).eq('id', usuario_id).eq('igreja_id', igreja.id);
+      if (error) return erro('Não consegui salvar: ' + error.message, 500);
+    }
+
+    if (alvo.auth_id) {
+      const { data: atual } = await admin.from('usuarios')
+        .select('nome,usuario,papel,membro_id').eq('id', usuario_id).maybeSingle();
+      await admin.auth.admin.updateUserById(alvo.auth_id, {
+        user_metadata: { igreja_id: igreja.id, papel: atual!.papel, nome: atual!.nome,
+                         usuario: atual!.usuario, membro_id: atual!.membro_id },
+      });
+    }
     return responder({ ok: true });
   }
 
