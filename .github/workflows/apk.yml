@@ -11,7 +11,7 @@ jobs:
   apk:
     name: Compilar o aplicativo Android
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
 
     steps:
       - name: Baixar o código
@@ -34,6 +34,7 @@ jobs:
       - name: Instalar dependências
         run: npm install --no-audit --no-fund
 
+      # ---------- Aplicativo ----------
       # A pasta android/ não fica versionada: é gerada a partir de www/ e do
       # capacitor.config.json, então nunca fica fora de sincronia.
       - name: Criar o projeto Android
@@ -52,28 +53,43 @@ jobs:
           cp android/app/build/outputs/apk/debug/app-debug.apk \
              "entrega/ekklesia-music-$(date +%Y-%m-%d)-${GITHUB_SHA::7}.apk"
 
-      # Versão de teste: mesmo app, sem nuvem e com outro identificador, para
-      # instalar ao lado do de verdade e experimentar sem risco nenhum.
+      # ---------- Versão de teste ----------
+      # Mesmo aplicativo, sem nuvem e com outro identificador, para instalar
+      # ao lado do de verdade e experimentar sem risco nenhum.
       - name: Preparar a versão de teste
         run: npm run build:teste
 
+      # O Capacitor lê sempre o capacitor.config.json da raiz — não existe
+      # opção de linha de comando para apontar outro arquivo. Por isso a
+      # configuração de teste toma o lugar dele e depois é devolvida.
       - name: Compilar o APK de teste
         run: |
+          set -e
+          mv capacitor.config.json capacitor.config.original.json
+          cp capacitor.config.teste.json capacitor.config.json
           rm -rf android
-          npx cap add android --config capacitor.config.teste.json
-          npx cap sync android --config capacitor.config.teste.json
-          cd android && ./gradlew assembleDebug --no-daemon
+          npx cap add android
+          npx cap sync android
+          ( cd android && ./gradlew assembleDebug --no-daemon )
+          mv capacitor.config.original.json capacitor.config.json
 
       - name: Guardar o APK de teste
         run: |
           cp android/app/build/outputs/apk/debug/app-debug.apk \
              "entrega/ekklesia-TESTE-$(date +%Y-%m-%d)-${GITHUB_SHA::7}.apk"
-          ls -lh entrega/
 
+      - name: Conferir o que foi gerado
+        if: always()
+        run: ls -lh entrega/ 2>/dev/null || echo 'nada foi gerado'
+
+      # always(): se a versão de teste falhar, o APK do aplicativo — que já
+      # está pronto — continua disponível para download. Antes uma falha no
+      # teste levava os dois embora.
       - name: Publicar os APKs para download
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ekklesia-music-apk
           path: entrega/*.apk
           retention-days: 30
-          if-no-files-found: error
+          if-no-files-found: warn
