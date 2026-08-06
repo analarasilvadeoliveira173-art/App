@@ -1,0 +1,13 @@
+{
+  "name": "Ekklesia Music",
+  "short_name": "Ekklesia",
+  "description": "Escalas, repertório e ensaios do ministério de louvor.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f7f9f8",
+  "theme_color": "#0e6b5c",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "./icone.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

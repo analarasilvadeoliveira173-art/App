@@ -1,0 +1,233 @@
+/* ============================================================
+   Componentes — as peças que as telas montam
+   ============================================================ */
+
+/* ---------------- Botões ---------------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--e2);
+  border: 1px solid var(--linha); background: var(--superficie); color: var(--texto);
+  border-radius: var(--r-m); padding: 10px 16px;
+  font-size: var(--t0); font-weight: 600; cursor: pointer;
+  transition: var(--transicao);
+  /* Alvo confortável no dedo, mesmo no botão pequeno. */
+  min-height: 42px;
+}
+.btn:hover { background: var(--superficie-2); }
+.btn:active { transform: translateY(1px); }
+.btn[disabled] { opacity: .55; cursor: not-allowed; transform: none; }
+
+.btn-principal {
+  background: var(--primaria); border-color: var(--primaria); color: #fff;
+  box-shadow: var(--sombra-1);
+}
+.btn-principal:hover { background: var(--primaria-forte); border-color: var(--primaria-forte); }
+
+.btn-perigo { color: var(--ruim); border-color: var(--ruim); background: transparent; }
+.btn-perigo:hover { background: var(--ruim-fundo); }
+
+.btn-bloco { width: 100%; }
+.btn-grande { min-height: 50px; font-size: var(--t1); }
+
+.btn-icone {
+  display: inline-grid; place-items: center;
+  width: 38px; height: 38px; min-height: 38px; padding: 0;
+  border: 1px solid var(--linha); background: var(--superficie);
+  border-radius: var(--r-m); color: var(--texto-fraco); cursor: pointer;
+  transition: var(--transicao);
+}
+.btn-icone:hover { background: var(--superficie-2); color: var(--texto); }
+.btn-icone svg { width: 18px; height: 18px; }
+.btn-icone.perigo:hover { background: var(--ruim-fundo); color: var(--ruim); }
+
+/* Botão que parece texto: para a ação secundária que não deve competir. */
+.btn-texto {
+  border: 0; background: none; color: var(--primaria);
+  font-size: var(--t-1); font-weight: 700; cursor: pointer;
+  padding: 6px 8px; border-radius: var(--r-p); min-height: 0;
+}
+.btn-texto:hover { background: var(--primaria-fundo); }
+
+/* ---------------- Campos ---------------- */
+.campo { margin-bottom: var(--e4); }
+.campo > label {
+  display: block; margin-bottom: var(--e1);
+  font-size: var(--t-1); font-weight: 600; color: var(--texto-fraco);
+}
+.entrada, .selecao, textarea.entrada {
+  width: 100%; padding: 11px 13px;
+  border: 1px solid var(--linha); border-radius: var(--r-m);
+  background: var(--superficie); color: var(--texto);
+  font-size: var(--t0); transition: var(--transicao);
+}
+.entrada:focus, .selecao:focus, textarea.entrada:focus {
+  border-color: var(--primaria);
+  box-shadow: 0 0 0 3px var(--primaria-fundo);
+  outline: none;
+}
+.entrada[disabled], .selecao[disabled] { background: var(--superficie-2); color: var(--texto-fraco); }
+textarea.entrada { min-height: 88px; resize: vertical; }
+
+/* background-color, não background: a forma curta apagaria a seta. */
+.selecao {
+  appearance: none;
+  background-color: var(--superficie);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235c6b68' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+  background-size: 17px;
+  padding-right: 38px;
+}
+
+.dica { margin-top: var(--e1); font-size: var(--t-2); color: var(--texto-fraco); }
+
+.linha-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--e3); }
+@media (max-width: 560px) { .linha-2 { grid-template-columns: 1fr; } }
+
+/* Senha com o olho de mostrar/esconder dentro do campo. */
+.campo-senha { position: relative; }
+.campo-senha .entrada { padding-right: 46px; }
+.campo-senha .ver-senha {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  border: 0; background: none; color: var(--texto-fraco);
+  padding: 7px; border-radius: var(--r-p); cursor: pointer;
+}
+.campo-senha .ver-senha svg { width: 19px; height: 19px; display: block; }
+
+/* ---------------- Caixas ---------------- */
+.cartao {
+  background: var(--superficie);
+  border: 1px solid var(--linha);
+  border-radius: var(--r-g);
+  box-shadow: var(--sombra-1);
+}
+.cartao-recheio { padding: var(--e5); }
+@media (max-width: 560px) { .cartao-recheio { padding: var(--e4); } }
+
+.titulo-secao {
+  margin: var(--e5) 0 var(--e3);
+  font-family: var(--fonte-texto);
+  font-size: var(--t-2); font-weight: 700;
+  letter-spacing: .09em; text-transform: uppercase;
+  color: var(--texto-fraco);
+}
+
+.cabeca-pagina {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: var(--e4); flex-wrap: wrap; margin-bottom: var(--e5);
+}
+.cabeca-pagina p { margin: var(--e1) 0 0; color: var(--texto-fraco); font-size: var(--t0); }
+.acoes-cabeca { display: flex; gap: var(--e2); flex-wrap: wrap; }
+
+/* ---------------- Selos ---------------- */
+.selo {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: var(--r-redondo);
+  font-size: var(--t-2); font-weight: 700; white-space: nowrap;
+  /* O título de seção é caixa alta; o selo não herda isso. */
+  text-transform: none; letter-spacing: 0;
+}
+.selo-bom { background: var(--bom-fundo); color: var(--bom); }
+.selo-atencao { background: var(--atencao-fundo); color: var(--atencao); }
+.selo-ruim { background: var(--ruim-fundo); color: var(--ruim); }
+.selo-info { background: var(--info-fundo); color: var(--info); }
+.selo-neutro { background: var(--superficie-2); color: var(--texto-fraco); }
+.selo-destaque { background: color-mix(in srgb, var(--destaque) 18%, transparent); color: var(--destaque); }
+
+/* ---------------- Tabelas ---------------- */
+/* A rolagem lateral acontece aqui dentro. Sem esta caixa, uma tabela
+   larga empurra a página inteira e o celular vira um mapa. */
+.rolagem-tabela { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+.tabela { width: 100%; border-collapse: collapse; font-size: var(--t0); }
+.tabela th {
+  text-align: left; padding: var(--e3) var(--e4);
+  font-size: var(--t-2); font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--texto-fraco);
+  border-bottom: 1px solid var(--linha); white-space: nowrap;
+}
+.tabela td { padding: var(--e3) var(--e4); border-bottom: 1px solid var(--linha); vertical-align: middle; }
+.tabela tr:last-child td { border-bottom: 0; }
+.tabela tbody tr:hover { background: var(--superficie-2); }
+.celula-acoes { display: flex; gap: var(--e1); justify-content: flex-end; }
+
+/* ---------------- Lista de pares ---------------- */
+.par {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: var(--e4); padding: 9px 0; border-bottom: 1px solid var(--linha);
+}
+.par:last-child { border-bottom: 0; }
+.par > span { color: var(--texto-fraco); font-size: var(--t-1); }
+.par > b { text-align: right; font-weight: 600; }
+
+/* ---------------- Vazio ---------------- */
+.vazio { text-align: center; padding: var(--e7) var(--e4); color: var(--texto-fraco); }
+.vazio svg { width: 44px; height: 44px; opacity: .45; margin-bottom: var(--e3); }
+.vazio h3 { color: var(--texto); margin-bottom: var(--e1); }
+.vazio p { max-width: 42ch; margin-inline: auto; font-size: var(--t0); }
+
+/* ---------------- Avatar ---------------- */
+.avatar {
+  display: inline-grid; place-items: center; flex: none;
+  width: 38px; height: 38px; border-radius: var(--r-redondo);
+  background: var(--primaria); color: #fff;
+  font-size: var(--t-1); font-weight: 700; letter-spacing: .02em;
+}
+.avatar-g { width: 54px; height: 54px; font-size: var(--t1); }
+
+/* ---------------- Janela ---------------- */
+.cortina {
+  position: fixed; inset: 0; z-index: 60;
+  display: grid; place-items: center; padding: var(--e4);
+  background: rgba(10, 20, 18, .55);
+  backdrop-filter: blur(2px);
+  animation: aparecer .16s ease;
+}
+.janela {
+  width: min(560px, 100%); max-height: min(86vh, 780px);
+  display: flex; flex-direction: column;
+  background: var(--superficie); border-radius: var(--r-g);
+  box-shadow: var(--sombra-3);
+  animation: subir .2s cubic-bezier(.2, .8, .3, 1);
+}
+.janela-cabeca {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--e3);
+  padding: var(--e4) var(--e5); border-bottom: 1px solid var(--linha);
+}
+.janela-corpo { padding: var(--e5); overflow-y: auto; }
+.janela-pe {
+  display: flex; justify-content: flex-end; gap: var(--e2);
+  padding: var(--e4) var(--e5); border-top: 1px solid var(--linha);
+}
+.fechar-janela {
+  border: 0; background: none; color: var(--texto-fraco);
+  font-size: var(--t3); line-height: 1; cursor: pointer;
+  padding: 2px 8px; border-radius: var(--r-p);
+}
+.fechar-janela:hover { background: var(--superficie-2); color: var(--texto); }
+
+@media (max-width: 560px) {
+  .janela-cabeca, .janela-pe { padding: var(--e4); }
+  .janela-corpo { padding: var(--e4); }
+  .janela-pe { flex-direction: column-reverse; }
+  .janela-pe .btn { width: 100%; }
+}
+
+/* ---------------- Aviso passageiro ---------------- */
+.avisos {
+  position: fixed; z-index: 80; left: 50%; transform: translateX(-50%);
+  bottom: calc(var(--e5) + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; gap: var(--e2);
+  width: min(440px, calc(100vw - 32px));
+}
+.aviso {
+  display: flex; align-items: flex-start; gap: var(--e2);
+  padding: var(--e3) var(--e4); border-radius: var(--r-m);
+  background: var(--texto); color: var(--fundo);
+  box-shadow: var(--sombra-2); font-size: var(--t0);
+  animation: subir .2s cubic-bezier(.2, .8, .3, 1);
+}
+.aviso-ruim { background: var(--ruim); color: #fff; }
+.aviso-bom { background: var(--bom); color: #fff; }
+
+@keyframes aparecer { from { opacity: 0 } to { opacity: 1 } }
+@keyframes subir { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }

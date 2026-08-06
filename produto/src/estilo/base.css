@@ -1,0 +1,71 @@
+/* ============================================================
+   Base — o que vale em toda página antes de qualquer componente
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--fundo);
+  color: var(--texto);
+  font-family: var(--fonte-texto);
+  font-size: var(--t0);
+  line-height: 1.55;
+  /* O aplicativo nunca rola para o lado: tabela larga rola dentro da
+     própria caixa, não arrastando a tela inteira. */
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  margin: 0;
+  font-family: var(--fonte-titulo);
+  font-weight: 600;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+h1 { font-size: var(--t4); }
+h2 { font-size: var(--t3); }
+h3 { font-size: var(--t1); }
+
+p { margin: 0 0 var(--e3); }
+p:last-child { margin-bottom: 0; }
+
+a { color: var(--primaria); }
+
+img, svg { max-width: 100%; }
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+/* Foco visível em tudo que recebe teclado. Quem navega por Tab precisa
+   enxergar onde está — e no Android o teclado físico existe. */
+:focus-visible {
+  outline: 2px solid var(--primaria);
+  outline-offset: 2px;
+  border-radius: var(--r-p);
+}
+:focus:not(:focus-visible) { outline: none; }
+
+/* Quem pediu menos movimento no sistema recebe menos movimento aqui. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Só para leitor de tela: rótulo que a pessoa que enxerga não precisa. */
+.so-leitor {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.escondido { display: none !important; }
+
+/* Onde números se alinham em coluna, eles precisam ter a mesma largura. */
+.numeros { font-variant-numeric: tabular-nums; }
