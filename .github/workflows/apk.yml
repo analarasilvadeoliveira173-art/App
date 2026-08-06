@@ -1,0 +1,62 @@
+name: Gerar APK
+
+# Roda a cada envio de código e também sob demanda, pelo botão
+# "Run workflow" na aba Actions do GitHub.
+on:
+  push:
+    branches: [main, 'claude/**']
+  workflow_dispatch:
+
+jobs:
+  apk:
+    name: Compilar o aplicativo Android
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Preparar o Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Preparar o Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Preparar o SDK do Android
+        uses: android-actions/setup-android@v3
+
+      - name: Instalar dependências
+        run: npm install --no-audit --no-fund
+
+      # A pasta android/ não fica versionada: é gerada a partir de www/ e do
+      # capacitor.config.json, então nunca fica fora de sincronia.
+      - name: Criar o projeto Android
+        run: npx cap add android
+
+      - name: Copiar os arquivos do aplicativo
+        run: npx cap sync android
+
+      - name: Compilar o APK
+        run: ./gradlew assembleDebug --no-daemon
+        working-directory: android
+
+      - name: Renomear com a data e o commit
+        run: |
+          mkdir -p entrega
+          cp android/app/build/outputs/apk/debug/app-debug.apk \
+             "entrega/ekklesia-music-$(date +%Y-%m-%d)-${GITHUB_SHA::7}.apk"
+          ls -lh entrega/
+
+      - name: Publicar o APK para download
+        uses: actions/upload-artifact@v4
+        with:
+          name: ekklesia-music-apk
+          path: entrega/*.apk
+          retention-days: 30
+          if-no-files-found: error
