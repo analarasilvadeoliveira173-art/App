@@ -40,12 +40,21 @@ function acharBin() {
   return null;
 }
 
+// Na sua máquina, sem PostgreSQL instalado, o teste avisa e não reprova.
+// No GitHub isso não vale: lá EXIGE_BANCO=1 transforma "pulei" em falha,
+// senão um dia o banco some do runner e a tela fica verde sem ter testado
+// nada — que é o pior tipo de teste que existe.
+const EXIGE = process.env.EXIGE_BANCO === '1';
+function pular(motivo, dica) {
+  console.log(EXIGE ? `  ✗ ${motivo}` : `  ⚠ ${motivo} — teste do banco pulado.`);
+  if (dica) console.log('    ' + dica);
+  process.exit(EXIGE ? 1 : 0);
+}
+
 const BIN = acharBin();
 if (!BIN) {
   console.log('\nBanco de dados');
-  console.log('  ⚠ PostgreSQL não encontrado — teste do banco pulado.');
-  console.log('    Instale com: apt-get install postgresql-16');
-  process.exit(0);
+  pular('PostgreSQL não encontrado', 'Instale com: apt-get install postgresql-16');
 }
 
 // Quem roda o initdb vira o superusuário do cluster. Como root não pode
@@ -74,9 +83,7 @@ try {
   execSync(EH_ROOT ? `su postgres -c '${up}'` : up, { stdio: 'ignore' });
   ok('PostgreSQL de teste no ar', true);
 } catch (e) {
-  console.log('  ⚠ não consegui subir o PostgreSQL — teste do banco pulado.');
-  console.log('    ' + String(e.message).split('\n')[0]);
-  process.exit(0);
+  pular('não consegui subir o PostgreSQL', String(e.message).split('\n')[0]);
 }
 
 try {

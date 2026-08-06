@@ -35,6 +35,10 @@ jobs:
       # regras de acesso só apareceria depois de publicado.
       - name: Isolamento entre igrejas
         run: npm run test:banco
+        env:
+          # Aqui o PostgreSQL sempre existe. Se um dia sumir, é para
+          # reprovar — não para passar batido com um aviso.
+          EXIGE_BANCO: '1'
 
       - name: Instalar o Chromium
         run: npx playwright install --with-deps chromium
