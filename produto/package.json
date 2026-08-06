@@ -1,0 +1,29 @@
+{
+  "name": "ekklesia-music-produto",
+  "version": "2.0.0",
+  "description": "Ekklesia Music — gestão de ministérios de louvor, para vender a igrejas",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "npm run test:estatico && npm run test:banco && npm run test:tela",
+    "test:estatico": "node testes/verifica-estatico.mjs",
+    "test:banco": "node testes/verifica-banco.mjs",
+    "test:tela": "node testes/verifica-tela.mjs",
+    "apk": "vite build && npx cap sync android && cd android && ./gradlew assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/app": "^6.0.2",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/filesystem": "^6.0.2",
+    "@capacitor/share": "^6.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.0",
+    "playwright": "^1.56.1",
+    "vite": "^6.0.7"
+  }
+}

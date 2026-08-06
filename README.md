@@ -69,17 +69,23 @@ Configurações mostra em que modo você está.
 ## Segurança — leia antes de colocar no ar
 
 - **A chave `anon` fica visível dentro do aplicativo.** Isso é normal no
-  Supabase, mas significa que quem protege os dados é o *Row Level Security*.
-  O `schema.sql` já ativa o RLS em todas as tabelas com uma política mínima,
-  de igreja única, que **libera leitura e escrita para qualquer portador da
-  chave**. Para atender mais de uma igreja, troque pelas políticas de
-  isolamento por `igreja_id` comentadas no fim do mesmo arquivo — elas
-  dependem do Supabase Auth.
-- **Os PINs são guardados em texto puro.** O modelo de acesso aqui é de
-  conveniência (destravar o próprio painel), não de segredo bancário. Não
-  reaproveite nesses campos uma senha usada em outro serviço.
+  Supabase: quem protege os dados não é a chave, é o *Row Level Security*.
+  O `schema.sql` liga o RLS em todas as tabelas e define quem pode o quê —
+  cada pessoa só alcança a própria igreja, e dentro dela o membro lê o
+  ministério mas só escreve o que é dele. A checagem é do banco, não da tela.
+- **Prove antes de vender.** Cole `supabase/teste-de-isolamento.sql` no SQL
+  Editor: ele monta duas igrejas de mentira, tenta invadir uma pela outra e
+  apaga tudo no fim. Toda linha do resultado precisa dizer `PASSOU`. O mesmo
+  teste roda sozinho a cada envio de código, com `npm run test:banco`.
+- **As senhas ficam embaralhadas no Supabase Auth**, nunca em coluna de
+  tabela. Mínimo de 6 caracteres, e nem o administrador consegue ler a de
+  alguém — só definir outra. (No modo aparelho, sem nuvem, a senha continua
+  guardada em texto no próprio celular: ali ela só destrava o painel local.)
+- **Entrar tem freio.** Nome errado e senha errada respondem a mesma coisa,
+  então não dá para descobrir quem é da equipe tentando nomes; e 10 erros em
+  10 minutos do mesmo lugar fecham a entrada por alguns minutos.
 - Nunca versione a `service_role` do Supabase. Só a chave `anon` entra no
-  aplicativo.
+  aplicativo — a `service_role` fica na função de acessos, no servidor.
 
 ---
 
@@ -158,10 +164,45 @@ build, e o arquivo pode ser enviado por e-mail ou pendrive se necessário.
 | **Líder** | Escalas, repertório, ensaios, membros e relatórios |
 | **Membro** | Vê as próprias escalas, confirma presença, informa indisponibilidade e — quando é voz principal — sugere louvores |
 
-Membros entram tocando no próprio nome na tela inicial, com PIN opcional.
-Líderes e administradores entram por usuário e senha.
+Todo mundo entra pela mesma tela, digitando **o próprio nome e a senha**.
+Membros usam o nome como está no cadastro (o primeiro nome basta, se não
+houver outra pessoa com ele); líderes e administradores podem usar o nome ou
+o login que o administrador criou. Acentos e maiúsculas não importam.
+
+No modo nuvem, o login de cada pessoa é criado em **Membros → Gerar acesso**
+ou em **Usuários**, e a senha aparece uma única vez, na hora — depois disso
+ela fica embaralhada no servidor. Cada um pode trocar a sua em **Meu perfil**.
+
+No modo aparelho, a senha é definida na própria ficha do membro e é
+obrigatória: sem ela a pessoa não consegue acessar.
+
+**Esqueceu a senha?** Na nuvem, a liderança gera um código de uso único em
+**Usuários** (ícone de chave) e manda no WhatsApp; a pessoa toca em **Esqueci
+minha senha** na tela de entrada e escolhe a senha nova sozinha — nem a
+liderança fica sabendo qual é. O código vale 30 minutos e serve uma vez só.
 
 ---
+
+## Sistema visual
+
+O CSS tinha 25 tamanhos de fonte, 15 raios e 26 espaçamentos diferentes
+espalhados pelo arquivo — o que fazia cada tela parecer de um app diferente.
+Hoje tudo passa por escalas declaradas no `:root` do `www/index.html`:
+
+| | |
+|---|---|
+| Tipografia | `--t-2` a `--t6`, razão ~1,2 |
+| Espaçamento | `--e1` a `--e9`, base 4px |
+| Raios | `--r-sm`, `--r-md`, `--r-lg`, `--r-xl`, `--r-full` |
+| Elevação | `--sombra-1`, `--sombra-2`, `--sombra-3` |
+| Fontes | `--fonte-display` (Instrument Serif) e `--fonte-ui` (DM Sans) |
+
+A serifa aparece só nos títulos e nos números grandes, onde o contraste dela
+tem espaço para render; a sans carrega todo o resto da interface.
+
+Os testes estáticos reprovam se alguém voltar a escrever tamanhos ou raios
+fixos fora dessas escalas — é o que impede o sistema de se desfazer com o
+tempo.
 
 ## Personalização
 
