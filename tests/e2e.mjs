@@ -275,6 +275,25 @@ try {
   ok('o membro entra digitando o próprio nome', await celular.locator('#app').isVisible());
   ok('entra com papel de membro', (await celular.evaluate(() => user && user.papel)) === 'membro');
 
+  console.log('\nPainel do membro');
+  const destaque = await celular.locator('.proximo').first();
+  if (await destaque.count()) {
+    const texto = await destaque.textContent();
+    ok('mostra a própria escala em destaque', /SUA PRÓXIMA ESCALA|Sua próxima escala|não está escalado/i.test(texto));
+  }
+
+  console.log('\nCelular: nada de arrastar a tela para o lado');
+  for (const tela of ['escalas', 'louvores', 'membros', 'painel']) {
+    await celular.evaluate(t => window.ir(t), tela);
+    await celular.waitForTimeout(450);
+    const larguras = await celular.evaluate(() => ({
+      conteudo: document.documentElement.scrollWidth,
+      janela: document.documentElement.clientWidth
+    }));
+    ok(`${tela} cabe na largura do celular`, larguras.conteudo <= larguras.janela + 1,
+      `conteúdo ${larguras.conteudo}px em janela de ${larguras.janela}px`);
+  }
+
   console.log('\nErros de JavaScript');
   ok('nenhum erro no console', erros.length === 0, erros.join(' | '));
 } catch (e) {

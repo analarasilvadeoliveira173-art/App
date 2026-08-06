@@ -451,6 +451,18 @@ table.tbl th{background:#F4F6F2}table.tbl tr:hover td{background:#F8FAF7}
 .proximo-acoes .btn:hover{background:rgba(255,255,255,.24);border-color:rgba(255,255,255,.34)}
 .proximo-acoes .btn-gold{background:var(--gold);border-color:var(--gold);color:#33280A}
 .proximo-acoes .btn-gold:hover{background:var(--gold);filter:brightness(1.06)}
+/* Bloco de presença dentro do card escuro: os botões precisam de contraste
+   próprio, senão somem no verde. */
+.proximo-presenca{position:relative;z-index:1;margin-top:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.proximo-presenca-rotulo{font-size:12.5px;color:rgba(255,255,255,.72);font-weight:600}
+.proximo .seg{border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.1)}
+.proximo .seg button{background:transparent;color:rgba(255,255,255,.78)}
+.proximo .seg button:hover{background:rgba(255,255,255,.14);color:#fff}
+.proximo .seg button.sel-ok{background:var(--ok);color:#fff}
+.proximo .seg button.sel-warn{background:var(--warn);color:#2E2400}
+.proximo .seg button.sel-bad{background:var(--bad);color:#fff}
+.proximo-selo{display:inline-block;margin-top:11px;padding:5px 11px;border-radius:999px;
+  background:var(--gold);color:#33280A;font-size:11.5px;font-weight:800}
 .proximo.vazio{background:var(--surface);color:var(--ink);box-shadow:var(--shadow);border:1px dashed var(--line)}
 .proximo.vazio:after{display:none}
 .proximo.vazio .proximo-rotulo{color:var(--muted)}
@@ -465,6 +477,51 @@ table.tbl th{background:#F4F6F2}table.tbl tr:hover td{background:#F8FAF7}
 }
 /* Saudação do painel */
 .saudacao{font-family:'Manrope';font-weight:800;letter-spacing:-.035em}
+
+/* ---------- Cartões de culto na lista ----------
+   A faixa lateral dá o status de relance, sem precisar ler o chip. */
+.item{position:relative;overflow:hidden}
+.item:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--line)}
+.item-definida:before{background:var(--info)}
+.item-incompleta:before{background:var(--warn)}
+.item-realizada:before{background:var(--ok)}
+.item-rascunho:before{background:var(--line)}
+.item:focus-visible{outline:3px solid var(--primary-soft);outline-offset:2px}
+.it-quando{display:inline-block;margin-left:9px;padding:3px 9px;border-radius:999px;
+  background:var(--primary-soft);color:var(--primary-ink);font-family:'DM Sans';font-size:11.5px;font-weight:700;
+  vertical-align:middle;letter-spacing:0}
+.it-tema{font-size:13px;color:var(--muted);margin-top:7px;display:flex;gap:6px;align-items:flex-start}
+.it-tema:before{content:"“";font-family:'Manrope';font-size:22px;line-height:.8;color:var(--gold);flex:none}
+.it-barra{height:4px;border-radius:99px;background:var(--surface2);overflow:hidden;margin:13px 0 3px}
+.it-barra i{display:block;height:100%;border-radius:99px;background:var(--primary);transition:width .5s ease}
+:root[data-theme="dark"] .it-barra{background:var(--surface2)}
+:root[data-theme="dark"] .it-barra i{background:var(--primary-ink)}
+
+/* ---------- Tabelas no celular ----------
+   Com min-width fixo elas obrigavam a arrastar a tela para o lado só para
+   ler o tom de um louvor. Aqui cada linha vira um cartão empilhado. */
+@media(max-width:640px){
+  .tbl-wrap:has(.tbl-cartoes){overflow:visible}
+  table.tbl.tbl-cartoes{min-width:0;display:block;background:transparent}
+  .tbl-cartoes thead{display:none}
+  .tbl-cartoes tbody,.tbl-cartoes tr{display:block}
+  .tbl-cartoes tr{background:var(--surface);border-radius:17px;margin-bottom:11px;padding:15px 17px;box-shadow:var(--shadow)}
+  .tbl-cartoes tr:hover td{background:transparent}
+  .tbl-cartoes td{display:flex;align-items:center;justify-content:space-between;gap:14px;
+    border:0;padding:5px 0;font-size:13.5px}
+  .tbl-cartoes td:before{content:attr(data-label);color:var(--muted);font-size:12px;font-weight:700;flex:none}
+  .tbl-cartoes td:empty{display:none}
+  /* A primeira célula é o nome: vira o título do cartão, sem rótulo. */
+  .tbl-cartoes td:first-child{display:block;padding:0 0 11px;margin-bottom:7px;border-bottom:1px solid var(--line)}
+  .tbl-cartoes td:first-child:before{display:none}
+  /* A última traz os botões, que ficam alinhados à direita. */
+  .tbl-cartoes td:last-child{padding-top:11px;margin-top:5px;border-top:1px solid var(--line);justify-content:flex-end}
+  .tbl-cartoes td:last-child:before{display:none}
+  .tbl-cartoes .actions-cell{flex-wrap:wrap;justify-content:flex-end}
+}
+
+/* Estados vazios: uma tela vazia é um convite para agir, não um beco sem saída. */
+.empty .e-ico{background:var(--primary-soft);color:var(--primary)}
 
 /* ============================================================
    TEMA ESCURO
@@ -1453,6 +1510,44 @@ function cardProximoCulto(){
     </div>
   </div>`;
 }
+/* A mesma peça, na versão do membro: o que ele precisa saber é em que função
+   está e se já confirmou — não quantas posições faltam preencher. */
+function cardProximoDoMembro(proximo){
+  if(!proximo){
+    return `<div class="proximo vazio">
+      <div class="proximo-rotulo">Sua próxima escala</div>
+      <div class="proximo-quando" style="font-size:23px">Você não está escalado</div>
+      <div class="proximo-onde">Quando a liderança montar uma escala com você, ela aparece aqui.</div>
+    </div>`;
+  }
+  const {c,roles}=proximo;
+  const p=presencaDe(user.membro_id,{culto_id:c.id});
+  const principal=roles.some(isVozPrincipal);
+  const funcao=roles.map(r=>isVocalEscala(r)?'Vocal':displayFuncao(r))
+    .filter((v,i,a)=>a.indexOf(v)===i).join(' + ');
+  const conta=contagemCulto(c.data);
+  return `<div class="proximo">
+    <div class="proximo-topo">
+      <div>
+        <div class="proximo-rotulo">Sua próxima escala</div>
+        <div class="proximo-quando">${esc(funcao)}</div>
+        <div class="proximo-onde">${esc(c.tipo||'Culto')} · ${dataPorExtenso(c.data)}${c.horario?' · '+esc(c.horario):''}${c.local?'<br>'+esc(c.local):''}</div>
+        ${principal?'<div class="proximo-selo">Voz principal — você escolhe os louvores</div>':''}
+      </div>
+      <div class="proximo-conta ${conta.destaque?'hoje':''}">
+        <b>${esc(conta.n)}</b>${conta.rotulo?`<span>${conta.rotulo}</span>`:''}
+      </div>
+    </div>
+    <div class="proximo-presenca">
+      <span class="proximo-presenca-rotulo">${p&&p.status!=='pendente'?'Você respondeu:':'A liderança está esperando sua resposta:'}</span>
+      ${segPresenca(user.membro_id,{culto_id:c.id})}
+    </div>
+    <div class="proximo-acoes">
+      <button class="btn" onclick="abrirDetalhe('${c.id}')">Ver o culto e os louvores</button>
+      ${principal?`<button class="btn btn-gold" onclick="abrirDetalhe('${c.id}')">Sugerir louvor</button>`:''}
+    </div>
+  </div>`;
+}
 /* A barra só ganha largura depois de estar na tela, para a transição acontecer. */
 function animarBarraProximo(){
   requestAnimationFrame(()=>{
@@ -1535,16 +1630,6 @@ function renderPainelMembro(){
   const proximo = minhas[0];
   const proxEnsaio = D.ensaios.filter(e=>e.status==='agendado'&&e.data>=hojeISO()&&(e.membros_convocados||[]).includes(user.membro_id))
     .sort((a,b)=>a.data<b.data?-1:1)[0];
-  const alertaCulto = proximo ? (()=>{
-    const {e,c,roles}=proximo;
-    const p=presencaDe(user.membro_id,{culto_id:c.id});
-    const principal=roles.some(isVozPrincipal);
-    const textoFuncao=roles.map(r=>isVocalEscala(r)?'Vocal':displayFuncao(r)).filter((v,i,a)=>a.indexOf(v)===i).join(' + ');
-    return `<div class="member-alert-card culto">
-      <div class="member-alert-top"><div><div class="member-alert-label">Próximo culto</div><div class="member-alert-title">${fmtDataCurta(c.data)} · ${esc(c.horario||'')}</div><div class="member-alert-sub">${esc(c.tipo||'Culto')} — ${esc(textoFuncao)} ${principal?'<span class="principal-badge">voz principal</span>':''}</div>${c.local?`<div class="member-alert-sub">Local: ${esc(c.local)}</div>`:''}</div>${chip(STATUS_PRES,p?p.status:'pendente')}</div>
-      <div class="member-alert-actions">${segPresenca(user.membro_id,{culto_id:c.id})}<button class="btn btn-sm" onclick="abrirDetalhe('${c.id}')">Ver culto</button>${principal?`<button class="btn btn-primary btn-sm" onclick="abrirDetalhe('${c.id}')">Sugerir louvor</button>`:''}</div>
-    </div>`;
-  })() : `<div class="member-alert-card empty"><div class="member-alert-label">Próximo culto</div><div class="member-alert-title">Sem escala futura</div><div class="member-alert-sub">Quando a liderança montar uma escala com você, ela aparecerá aqui.</div></div>`;
   const alertaEnsaio = proxEnsaio ? (()=>{
     const p=presencaDe(user.membro_id,{ensaio_id:proxEnsaio.id});
     return `<div class="member-alert-card ensaio">
@@ -1556,7 +1641,8 @@ function renderPainelMembro(){
     <div class="page-head"><div>
       <h2 class="saudacao">${saudacao()}, ${esc((user.nome||'').split(' ')[0])}</h2>
       <p>O que vem por aí no ministério</p></div></div>
-    <div class="member-alert-grid stagger">${alertaCulto}${alertaEnsaio}</div>
+    ${cardProximoDoMembro(proximo)}
+    <div class="member-alert-grid stagger">${alertaEnsaio}</div>
     ${D.avisos.length?`<div class="section-title" style="margin-top:0">Mural de avisos</div>${muralHTML(3)}`:''}
     <div class="section-title" style="justify-content:space-between"><span>Suas próximas escalas</span><button class="btn btn-sm" onclick="modalIndisp()">Informar indisponibilidade</button></div>
     ${indispBloco()}
@@ -1664,7 +1750,7 @@ function renderEscalasLista(){
   if(q) cultos=cultos.filter(c=>[c.tipo,c.tema,c.local,fmtData(c.data),fmtDataCurta(c.data)].some(v=>(v||'').toLowerCase().includes(q)));
   const hoje=hojeISO();
   cultos.sort((a,b)=>{const fa=a.data>=hoje,fb=b.data>=hoje; if(fa&&fb)return a.data<b.data?-1:1; if(!fa&&!fb)return a.data<b.data?1:-1; return fa?-1:1;});
-  box.innerHTML = cultos.length?`<div class="list">${cultos.map(cardCulto).join('')}</div>`
+  box.innerHTML = cultos.length?`<div class="list stagger">${cultos.map(cardCulto).join('')}</div>`
     :(D.cultos.length&&(q||escalasFiltro.status)?estadoVazio(CAL_ICON,'Nada encontrado','Nenhuma escala corresponde à busca ou ao filtro.')
     :estadoVazio(CAL_ICON,'Nenhuma escala',podeEditar()?'Monte a primeira escala do ministério.':'Você ainda não foi escalado em nenhum culto.',podeEditar()?`<button class="btn btn-primary" onclick="novaEscala()">+ Montar escala</button>`:''));
 }
@@ -1672,9 +1758,22 @@ function cardCulto(c){
   const es=escalasDoCulto(c.id).filter(e=>e.membro_id); const total=new Set(es.map(e=>e.membro_id)).size;
   const conf=[...new Set(es.map(e=>e.membro_id))].filter(mid=>{const p=presencaDe(mid,{culto_id:c.id});return p&&p.status==='confirmado';}).length;
   const vag=vagosDoCulto(c.id).length;
-  return `<div class="item" onclick="abrirDetalhe('${c.id}')">
-    <div class="it-top"><div><div class="it-date">${fmtDataCurta(c.data)}</div><div class="it-sub">${esc(c.tipo||'Culto')} · ${esc(c.horario||'—')}</div></div>${chip(STATUS_CULTO,c.status)}</div>
-    ${c.tema?`<div style="font-size:13px;color:var(--muted)">📖 ${esc(c.tema)}</div>`:''}
+  const prog=preenchimentoCulto(c.id);
+  const futuro=c.data>=hojeISO();
+  const dias=-diasDesde(c.data);
+  /* "em 3 dias" é como a equipe pensa a semana; a data sozinha faz contar nos dedos. */
+  const quando = !futuro ? '' : dias===0 ? 'hoje' : dias===1 ? 'amanhã' : dias<=14 ? 'em '+dias+' dias' : '';
+  return `<div class="item item-${esc(c.status||'rascunho')}" onclick="abrirDetalhe('${c.id}')"
+      role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirDetalhe('${c.id}')}">
+    <div class="it-top">
+      <div>
+        <div class="it-date">${fmtDataCurta(c.data)}${quando?`<span class="it-quando">${quando}</span>`:''}</div>
+        <div class="it-sub">${esc(c.tipo||'Culto')} · ${esc(c.horario||'—')}</div>
+      </div>${chip(STATUS_CULTO,c.status)}
+    </div>
+    ${c.tema?`<div class="it-tema">${esc(c.tema)}</div>`:''}
+    ${prog?`<div class="it-barra" title="${prog.preenchidas} de ${prog.total} posições preenchidas">
+      <i style="width:${prog.pct}%"></i></div>`:''}
     <div class="it-meta">
       <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${IC.users}</svg>${total} escalados</span>
       <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${IC.check}</svg>${conf} confirm.</span>
@@ -2059,12 +2158,12 @@ function louvFiltradas(){ let a=[...D.louvores]; const q=louvFiltro.q.toLowerCas
 function renderLouvLista(){
   const arr=louvFiltradas(); const ed=podeEditar(); const box=document.getElementById('louvLista'); if(!box)return;
   if(!arr.length){ box.innerHTML=estadoVazio(LOUV_ICON,'Nenhum louvor',D.louvores.length?'Nenhum resultado para esse filtro.':'Cadastre o primeiro louvor do repertório.',(ed&&!D.louvores.length)?`<button class="btn btn-primary" onclick="modalLouvor()">+ Novo louvor</button>`:''); return; }
-  box.innerHTML=`<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Louvor</th><th>Categoria</th><th>Tom</th><th>Vezes</th><th>Última vez</th><th></th></tr></thead><tbody>
+  box.innerHTML=`<div class="tbl-wrap"><table class="tbl tbl-cartoes"><thead><tr><th>Louvor</th><th>Categoria</th><th>Tom</th><th>Vezes</th><th>Última vez</th><th></th></tr></thead><tbody>
     ${arr.map(l=>`<tr>
       <td><div class="cell-name"><div class="song-n" style="width:30px;height:30px">♪</div><div><b>${esc(l.nome)}</b>${l.cantor?`<div style="font-size:12px;color:var(--muted)">${esc(l.cantor)}</div>`:''}</div></div></td>
-      <td>${l.categoria?`<span class="chip chip-muted">${esc(l.categoria)}</span>`:'—'}</td>
-      <td>${l.tom?`<span class="chip chip-gold">${esc(l.tom)}</span>`:'—'}</td>
-      <td>${l.vezes_cantado||0}</td><td style="white-space:nowrap">${l.ultima_vez?fmtData(l.ultima_vez):'—'}</td>
+      <td data-label="Categoria">${l.categoria?`<span class="chip chip-muted">${esc(l.categoria)}</span>`:'—'}</td>
+      <td data-label="Tom">${l.tom?`<span class="chip chip-gold">${esc(l.tom)}</span>`:'—'}</td>
+      <td data-label="Vezes cantado">${l.vezes_cantado||0}</td><td data-label="Última vez" style="white-space:nowrap">${l.ultima_vez?fmtData(l.ultima_vez):'—'}</td>
       <td><div class="actions-cell">
         ${songActionsByLouvor(l)}
         ${ed?`<button class="ico-btn" onclick="marcarUsado('${l.id}')" title="Marcar como usado hoje"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></button>
@@ -2253,15 +2352,15 @@ function membFiltradas(){ let a=[...D.membros]; const q=membFiltro.q.toLowerCase
 function renderMembLista(){
   const arr=membFiltradas(); const ed=podeEditar(); const box=document.getElementById('membLista'); if(!box)return;
   if(!arr.length){ box.innerHTML=estadoVazio(IC.users,'Nenhum membro',D.membros.length?'Nenhum resultado para essa busca.':'Cadastre o primeiro integrante do ministério.',(ed&&!D.membros.length)?`<button class="btn btn-primary" onclick="modalMembro()">+ Novo membro</button>`:''); return; }
-  box.innerHTML=`<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Membro</th><th>Funções</th><th>Telefone</th><th>Escalas</th><th>Presença</th><th>Status</th><th></th></tr></thead><tbody>
+  box.innerHTML=`<div class="tbl-wrap"><table class="tbl tbl-cartoes"><thead><tr><th>Membro</th><th>Funções</th><th>Telefone</th><th>Escalas</th><th>Presença</th><th>Status</th><th></th></tr></thead><tbody>
     ${arr.map(m=>{const fns=funcoesDoMembro(m.id); const pp=presPercent(m.id);
       return `<tr>
       <td><div class="cell-name">${avatar(m.nome,m.cor_avatar,'av-sm')}<b>${esc(m.nome)}</b></div></td>
-      <td>${fns.length?fns.slice(0,3).map(f=>`<span class="tag">${esc(f)}</span>`).join('')+(fns.length>3?`<span class="tag">+${fns.length-3}</span>`:''):'—'}</td>
-      <td style="white-space:nowrap">${m.telefone?esc(m.telefone):'—'}</td>
-      <td>${qtdEscalas(m.id)}</td>
-      <td>${pp==null?'—':pp+'%'}</td>
-      <td>${chip({ativo:['chip-ok','Ativo'],inativo:['chip-muted','Inativo']},m.status)}</td>
+      <td data-label="Funções">${fns.length?fns.slice(0,3).map(f=>`<span class="tag">${esc(f)}</span>`).join('')+(fns.length>3?`<span class="tag">+${fns.length-3}</span>`:''):'—'}</td>
+      <td data-label="Telefone" style="white-space:nowrap">${m.telefone?esc(m.telefone):'—'}</td>
+      <td data-label="Escalas">${qtdEscalas(m.id)}</td>
+      <td data-label="Presença">${pp==null?'—':pp+'%'}</td>
+      <td data-label="Status">${chip({ativo:['chip-ok','Ativo'],inativo:['chip-muted','Inativo']},m.status)}</td>
       <td><div class="actions-cell">
         <button class="ico-btn" onclick="historico('${m.id}')" title="Histórico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 7v5l3 2"/></svg></button>
         ${ed?`<button class="ico-btn" onclick="modalMembro('${m.id}')" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
