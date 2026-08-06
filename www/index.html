@@ -751,6 +751,14 @@ body.is-offline .net-bar{display:flex}
       <p class="auth-sub">Digite seu nome e a senha que a liderança cadastrou.</p>
 
       <form class="auth-form" onsubmit="event.preventDefault();entrar()">
+        <!-- Só aparece quando o app está ligado à nuvem e o aparelho ainda
+             não sabe de qual igreja é. Depois disso, fica guardado. -->
+        <div class="field hidden" id="campoIgreja">
+          <label for="lg-igreja">Código da igreja</label>
+          <input id="lg-igreja" class="input" placeholder="Ex.: BETEL-4K2P"
+                 autocapitalize="characters" autocomplete="off" spellcheck="false">
+          <div class="hint">A liderança passa esse código uma vez. Ele fica guardado neste aparelho.</div>
+        </div>
         <div class="field">
           <label for="lg-user">Seu nome</label>
           <input id="lg-user" class="input" autocomplete="username" placeholder="Como você está cadastrado" autocapitalize="words">
@@ -769,6 +777,7 @@ body.is-offline .net-bar{display:flex}
 
       <p id="lg-hint" class="hint" style="text-align:center;margin-top:14px"></p>
       <div class="access-demo hidden" id="demoAccessBox"><button type="button" onclick="preencherAcessoTeste()">Preencher acesso de teste</button></div>
+      <div class="access-demo hidden" id="trocarIgrejaBox"><button type="button" onclick="trocarIgreja()">Entrar em outra igreja</button></div>
     </main>
   </div>
 </div>
@@ -836,9 +845,8 @@ const SETTINGS_KEY = 'ekklesia_music_config_v1';
 /* Sessão: mantém a pessoa logada ao fechar e reabrir o aplicativo. */
 const SESSION_KEY = 'ekklesia_music_sessao_v1';
 const SESSION_MAX_DIAS = 30;
-/* Multi-tenant (preparação SaaS): todo registro novo recebe igreja_id.
-   Na migração para Supabase, cada igreja terá seu próprio id, com RLS
-   (Row Level Security) filtrando por igreja_id em todas as tabelas. */
+/* Sem nuvem, os dados são deste aparelho e pertencem a uma igreja só.
+   Na nuvem, a igreja de cada registro vem do crachá recebido no login. */
 const IGREJA_ID = 'igreja-local';
 /* ---------- Modo online (Supabase) — preencha para ativar ----------
    1) Crie um projeto em supabase.com e rode o arquivo supabase-schema.sql.
@@ -1086,6 +1094,8 @@ function sessaoAindaValida(s){
 }
 function restaurarSessao(){
   const s=lerSessao();
+  /* Na nuvem, quem manda é o crachá: sem ele, é preciso entrar de novo. */
+  if(MODO_NUVEM && !usandoDadosLocais && !nuvem.token){ limparSessao(); return false; }
   if(!s || !sessaoAindaValida(s)){ limparSessao(); return false; }
   /* Recarrega nome e papel do banco: eles podem ter mudado desde o último acesso. */
   if(s.papel==='membro' && s.membro_id){
@@ -1218,35 +1228,87 @@ const DB_LOCAL = {
 
 /* Mesmo contrato do DB_LOCAL, falando com o Supabase (PostgREST).
    Todas as consultas são isoladas por igreja_id (multi-tenant). */
+/* ---------- Sessão na nuvem ----------
+   O crachá (token) recebido no login carrega a igreja da pessoa. É por
+   ele que o banco decide o que ela pode ver — o aplicativo não tem mais
+   como pedir dados de outra igreja, nem por engano nem de propósito. */
+const SESSAO_NUVEM_KEY = 'ekklesia_music_sessao_nuvem_v1';
+let nuvem = { token:'', refresh:'', expira:0, igreja_id:'', codigo:'' };
+
+function carregarSessaoNuvem(){
+  try{ nuvem = {...nuvem, ...JSON.parse(localStorage.getItem(SESSAO_NUVEM_KEY)||'{}')}; }
+  catch(e){}
+}
+function salvarSessaoNuvem(){
+  try{ localStorage.setItem(SESSAO_NUVEM_KEY, JSON.stringify(nuvem)); }catch(e){}
+}
+function limparSessaoNuvem(){
+  nuvem = { token:'', refresh:'', expira:0, igreja_id:'', codigo:nuvem.codigo };
+  salvarSessaoNuvem();
+}
+function guardarTokens(dados){
+  nuvem.token   = dados.access_token || '';
+  nuvem.refresh = dados.refresh_token || '';
+  /* Renova um minuto antes de vencer, para não falhar no meio de uma ação. */
+  nuvem.expira  = Date.now() + ((dados.expires_in || 3600) - 60) * 1000;
+  const meta = (dados.user && dados.user.user_metadata) || {};
+  nuvem.igreja_id = meta.igreja_id || nuvem.igreja_id;
+  salvarSessaoNuvem();
+}
+async function renovarToken(){
+  if(!nuvem.refresh) return false;
+  const r = await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=refresh_token',{
+    method:'POST',
+    headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},
+    body:JSON.stringify({refresh_token:nuvem.refresh})
+  });
+  if(!r.ok){ limparSessaoNuvem(); return false; }
+  guardarTokens(await r.json());
+  return true;
+}
+async function tokenValido(){
+  if(!nuvem.token) return '';
+  if(Date.now() >= nuvem.expira){ if(!await renovarToken()) return ''; }
+  return nuvem.token;
+}
+
 const DB_REMOTO = {
-  _h(){ return {apikey:SUPABASE_KEY, Authorization:'Bearer '+SUPABASE_KEY, 'Content-Type':'application/json', Prefer:'return=representation'}; },
-  _u(table,qs){ return SUPABASE_URL+'/rest/v1/'+table+'?'+qs; },
-  _base(){ return 'igreja_id=eq.'+encodeURIComponent(IGREJA_ID); },
+  async _h(){
+    const t = await tokenValido();
+    if(!t) throw new Error('SESSAO_EXPIRADA');
+    return {apikey:SUPABASE_KEY, Authorization:'Bearer '+t,
+            'Content-Type':'application/json', Prefer:'return=representation'};
+  },
+  _u(table,qs){ return SUPABASE_URL+'/rest/v1/'+table+(qs?'?'+qs:''); },
+  /* O filtro por igreja saiu daqui de propósito: agora quem filtra é o
+     banco, com base no crachá. Filtrar no app era só uma sugestão. */
+  _base(){ return ''; },
   async list(table,opts={}){
-    let qs=this._base();
+    let qs='select=*';
     if(opts.eq) for(const k in opts.eq) qs+='&'+encodeURIComponent(k)+'=eq.'+encodeURIComponent(opts.eq[k]);
     if(opts.order) qs+='&order='+encodeURIComponent(opts.order.col)+'.'+(opts.order.asc===false?'desc':'asc');
-    const r=await fetch(this._u(table,qs),{headers:this._h()});
+    const r=await fetch(this._u(table,qs),{headers:await this._h()});
     if(!r.ok) throw new Error('Supabase list '+table+': '+r.status);
     return r.json();
   },
   async insert(table,row){
-    row={...row}; if(!row.id) row.id=uid(); if(!row.criado_em) row.criado_em=new Date().toISOString(); if(!row.igreja_id) row.igreja_id=IGREJA_ID;
-    const r=await fetch(SUPABASE_URL+'/rest/v1/'+table,{method:'POST',headers:this._h(),body:JSON.stringify(row)});
+    row={...row}; if(!row.id) row.id=uid(); if(!row.criado_em) row.criado_em=new Date().toISOString();
+    if(!row.igreja_id) row.igreja_id=nuvem.igreja_id;
+    const r=await fetch(SUPABASE_URL+'/rest/v1/'+table,{method:'POST',headers:await this._h(),body:JSON.stringify(row)});
     if(!r.ok) throw new Error('Supabase insert '+table+': '+r.status);
     const arr=await r.json(); return arr[0]||row;
   },
   async update(table,id,patch){
-    const r=await fetch(this._u(table,'id=eq.'+encodeURIComponent(id)+'&'+this._base()),{method:'PATCH',headers:this._h(),body:JSON.stringify(patch)});
+    const r=await fetch(this._u(table,'id=eq.'+encodeURIComponent(id)),{method:'PATCH',headers:await this._h(),body:JSON.stringify(patch)});
     if(!r.ok) throw new Error('Supabase update '+table+': '+r.status);
     const arr=await r.json(); return arr[0]||null;
   },
   async remove(table,id){
-    const r=await fetch(this._u(table,'id=eq.'+encodeURIComponent(id)+'&'+this._base()),{method:'DELETE',headers:this._h()});
+    const r=await fetch(this._u(table,'id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:await this._h()});
     if(!r.ok) throw new Error('Supabase remove '+table+': '+r.status);
   },
   async removeWhere(table,field,val){
-    const r=await fetch(this._u(table,encodeURIComponent(field)+'=eq.'+encodeURIComponent(val)+'&'+this._base()),{method:'DELETE',headers:this._h()});
+    const r=await fetch(this._u(table,encodeURIComponent(field)+'=eq.'+encodeURIComponent(val)),{method:'DELETE',headers:await this._h()});
     if(!r.ok) throw new Error('Supabase removeWhere '+table+': '+r.status);
   }
 };
@@ -2845,10 +2907,71 @@ function procurarAcesso(identificador){
   return {tipo:'nenhum'};
 }
 
-function entrar(){
+/* Erros que a função do banco devolve, traduzidos para quem está entrando. */
+const ERROS_ENTRADA = {
+  IGREJA_NAO_ENCONTRADA:'Não encontrei esse código de igreja. Confira com a liderança.',
+  IGREJA_SUSPENSA:'O acesso desta igreja está suspenso. Fale com quem contratou o aplicativo.',
+  NOME_AMBIGUO:'Há mais de uma pessoa com esse nome. Digite o nome completo.',
+  PESSOA_NAO_ENCONTRADA:'Não encontrei esse nome nesta igreja. Confira com a liderança.'
+};
+
+/* Na nuvem, quem confere a senha é o servidor: o app manda código, nome e
+   senha, e recebe de volta um crachá que só abre aquela igreja. */
+async function entrarNaNuvem(codigo, nome, senha){
+  const rpc = await fetch(SUPABASE_URL+'/rest/v1/rpc/email_de_acesso',{
+    method:'POST',
+    headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
+    body:JSON.stringify({p_codigo:codigo,p_nome:nome})
+  });
+  if(!rpc.ok){
+    const detalhe = await rpc.json().catch(()=>({}));
+    const chave = Object.keys(ERROS_ENTRADA).find(k=>String(detalhe.message||'').includes(k));
+    throw new Error(chave ? ERROS_ENTRADA[chave] : 'Não consegui verificar esse acesso agora.');
+  }
+  const email = await rpc.json();
+  if(!email) throw new Error(ERROS_ENTRADA.PESSOA_NAO_ENCONTRADA);
+
+  const login = await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=password',{
+    method:'POST',
+    headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},
+    body:JSON.stringify({email,password:senha})
+  });
+  if(!login.ok) throw new Error('Senha incorreta.');
+
+  const dados = await login.json();
+  nuvem.codigo = String(codigo).trim().toUpperCase();
+  guardarTokens(dados);
+
+  const meta = (dados.user && dados.user.user_metadata) || {};
+  return { nome: meta.nome || nome, papel: meta.papel || 'membro' };
+}
+
+async function entrar(){
   const identificador=val('lg-user'), senha=val('lg-pin');
   if(!identificador){ toast('Digite seu nome.','bad'); focar('lg-user'); return; }
   if(!senha){ toast('Digite sua senha.','bad'); focar('lg-pin'); return; }
+
+  if(MODO_NUVEM && !usandoDadosLocais){
+    const codigo = val('lg-igreja') || nuvem.codigo;
+    if(!codigo){ toast('Digite o código da sua igreja.','bad'); focar('lg-igreja'); return; }
+    try{
+      const quem = await entrarNaNuvem(codigo, identificador, senha);
+      await carregar();
+      /* O papel vem do crachá, não da tabela: assim ninguém vira líder
+         editando o próprio cadastro. */
+      const meuUsuario = D.usuarios.find(u=>chaveNome(u.nome)===chaveNome(quem.nome))
+        || D.usuarios.find(u=>u.papel===quem.papel);
+      user={ nome:quem.nome, usuario:(meuUsuario&&meuUsuario.usuario)||identificador,
+             papel:quem.papel, membro_id:(meuUsuario&&meuUsuario.membro_id)||null };
+      const pe=document.getElementById('lg-pin'); if(pe) pe.value='';
+      abrirApp();
+    }catch(e){
+      console.error(e);
+      toast(e.message||'Não consegui entrar.','bad');
+      focar(/código|igreja/i.test(e.message||'') ? 'lg-igreja' : 'lg-pin');
+    }
+    return;
+  }
 
   const achado=procurarAcesso(identificador);
 
@@ -2896,7 +3019,7 @@ function preencherAcessoTeste(){
 function abrirSistema(){ $('#login').classList.remove('hidden'); window.scrollTo(0,0); }
 function sair(){
   confirmar('Deseja sair da sua conta?', ()=>{
-    user=null; W=null; limparSessao();
+    user=null; W=null; limparSessao(); limparSessaoNuvem();
     $('#app').classList.add('hidden');
     $('#login').classList.remove('hidden'); atualizarDicaAdmin();
     window.scrollTo(0,0);
@@ -2948,10 +3071,36 @@ document.addEventListener('keydown',e=>{
 function abrirTelaInicial(){
   if(restaurarSessao()) return;
   abrirSistema();
+  prepararCampoIgreja();
 }
 
 /* O atalho de acesso de teste só existe enquanto a senha padrão não foi
    trocada. Depois que a igreja define a própria senha, ele some. */
+/* O código da igreja é pedido uma vez por aparelho. Quem já entrou antes
+   não precisa digitar de novo — mas pode trocar, se mudar de igreja. */
+function prepararCampoIgreja(){
+  const campo=document.getElementById('campoIgreja');
+  const input=document.getElementById('lg-igreja');
+  if(!campo||!input) return;
+  const precisa = MODO_NUVEM && !usandoDadosLocais;
+  campo.classList.toggle('hidden', !precisa || !!nuvem.codigo);
+  if(precisa && nuvem.codigo){
+    input.value = nuvem.codigo;
+    const rodape=document.getElementById('trocarIgrejaBox');
+    if(rodape) rodape.classList.remove('hidden');
+  }
+}
+function trocarIgreja(){
+  nuvem.codigo=''; limparSessaoNuvem();
+  const campo=document.getElementById('campoIgreja');
+  const input=document.getElementById('lg-igreja');
+  if(campo) campo.classList.remove('hidden');
+  if(input){ input.value=''; input.focus(); }
+  const rodape=document.getElementById('trocarIgrejaBox');
+  if(rodape) rodape.classList.add('hidden');
+  toast('Digite o código da nova igreja.');
+}
+
 function atualizarDicaAdmin(){
   const adminPadrao=D.usuarios.some(u=>(u.usuario||'').toLowerCase()==='admin'&&String(u.pin)==='1234'&&u.ativo!==false);
   const el=$('#lg-hint');
@@ -2975,9 +3124,17 @@ async function carregarDados(){
 async function init(){
   registrarVoltarNativo();
   carregarPreferencias(); aplicarTema();
+  carregarSessaoNuvem();
   if(!carregarLocal())seedDemo();
   garantirAdmin(); salvarLocal(); aplicarMarca();
   atualizarEstadoRede();
+
+  /* Na nuvem, sem crachá não há o que carregar: os dados só existem depois
+     de a pessoa entrar. Tentar antes só gerava erro no caminho normal. */
+  if(MODO_NUVEM && !usandoDadosLocais && !nuvem.token){
+    abrirSistema(); prepararCampoIgreja(); bootFechar();
+    return;
+  }
 
   try{
     await carregarDados();

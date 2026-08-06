@@ -2,9 +2,10 @@
    Testes de ponta a ponta no navegador.
    Roda com: npm run test:e2e
 
-   O Supabase é sempre bloqueado: os testes exercitam o caminho
-   de queda para os dados do aparelho, que é justamente o que
-   precisa continuar funcionando quando a internet falha.
+   O servidor de teste entrega o app com a nuvem desligada, então
+   estes testes cobrem o modo local — o que roda no aparelho, sem
+   depender de Supabase. O modo nuvem precisa de um servidor de
+   verdade e é verificado à parte.
    ============================================================ */
 import { chromium } from 'playwright';
 import { createServer } from 'node:http';
@@ -33,8 +34,15 @@ const servidor = createServer(async (req, res) => {
   const arquivo = join(WWW, caminho === '/' ? 'index.html' : caminho);
   if (!arquivo.startsWith(WWW)) { res.writeHead(403).end(); return; }
   try {
-    const conteudo = await readFile(arquivo);
+    let conteudo = await readFile(arquivo);
     const ext = arquivo.slice(arquivo.lastIndexOf('.'));
+    // Desliga a nuvem: estes testes cobrem o modo local, que é o que roda
+    // sem servidor. O modo nuvem depende de um Supabase e é testado à parte.
+    if (ext === '.html') {
+      conteudo = conteudo.toString()
+        .replace(/const SUPABASE_URL = '[^']*'/, "const SUPABASE_URL = ''")
+        .replace(/const SUPABASE_KEY = '[^']*'/, "const SUPABASE_KEY = ''");
+    }
     res.writeHead(200, { 'Content-Type': TIPOS[ext] || 'application/octet-stream' }).end(conteudo);
   } catch { res.writeHead(404).end('não encontrado'); }
 });
@@ -56,8 +64,6 @@ await pagina.route('**/rest/v1/**', r => r.abort());
 async function abrirEEntrar(p = pagina) {
   await p.goto(BASE, { waitUntil: 'networkidle' });
   await p.waitForTimeout(1400);
-  const offline = p.getByRole('button', { name: /Usar dados deste aparelho/i });
-  if (await offline.count()) { await offline.click(); await p.waitForTimeout(900); }
   if (await p.locator('#app').isVisible()) return;          // sessão restaurada
   await p.locator('#lg-user').fill('admin');
   await p.locator('#lg-pin').fill('1234');
@@ -66,21 +72,13 @@ async function abrirEEntrar(p = pagina) {
 }
 
 try {
-  console.log('\nAbertura com o servidor fora do ar');
+  console.log('\nAbertura no modo local');
   await pagina.goto(BASE, { waitUntil: 'networkidle' });
   await pagina.waitForTimeout(1500);
-  ok('mostra a tela de abertura em vez de página em branco', await pagina.locator('#boot').isVisible());
-  const msg = await pagina.locator('#bootMsg').textContent();
-  ok('explica a falha em português', /servidor/i.test(msg), `mensagem: "${msg}"`);
-  ok('oferece "Tentar de novo"', await pagina.getByRole('button', { name: /Tentar de novo/i }).count() > 0);
-  ok('oferece continuar com os dados do aparelho',
-    await pagina.getByRole('button', { name: /Usar dados deste aparelho/i }).count() > 0);
-
-  console.log('\nQueda para os dados do aparelho');
-  await pagina.getByRole('button', { name: /Usar dados deste aparelho/i }).click();
-  await pagina.waitForTimeout(1200);
   ok('a tela de abertura sai do caminho', (await pagina.locator('#boot').count()) === 0);
-  ok('cai direto na tela de login, sem página de vendas', await pagina.locator('#login').isVisible());
+  ok('abre direto no login', await pagina.locator('#login').isVisible());
+  ok('não pede código de igreja sem nuvem configurada',
+    await pagina.locator('#campoIgreja').isHidden());
   ok('a página de vendas não existe mais', (await pagina.locator('#salesPage').count()) === 0);
 
   console.log('\nLogin da liderança');
@@ -108,8 +106,6 @@ try {
   console.log('\nSessão persistente');
   await pagina.reload({ waitUntil: 'networkidle' });
   await pagina.waitForTimeout(1600);
-  const off2 = pagina.getByRole('button', { name: /Usar dados deste aparelho/i });
-  if (await off2.count()) { await off2.click(); await pagina.waitForTimeout(1000); }
   ok('continua logado sem pedir a senha de novo', await pagina.locator('#app').isVisible());
 
   console.log('\nTema');
@@ -254,8 +250,6 @@ try {
   const antes = await pagina.evaluate(() => ({ l: D.louvores.length, a: D.avisos.length, c: D.cultos.length }));
   await pagina.reload({ waitUntil: 'networkidle' });
   await pagina.waitForTimeout(1600);
-  const off3 = pagina.getByRole('button', { name: /Usar dados deste aparelho/i });
-  if (await off3.count()) { await off3.click(); await pagina.waitForTimeout(1000); }
   const depois = await pagina.evaluate(() => ({ l: D.louvores.length, a: D.avisos.length, c: D.cultos.length }));
   ok('os dados sobrevivem ao recarregamento', JSON.stringify(antes) === JSON.stringify(depois),
     `${JSON.stringify(antes)} → ${JSON.stringify(depois)}`);
