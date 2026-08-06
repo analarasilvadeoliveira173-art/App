@@ -46,14 +46,31 @@ jobs:
         run: ./gradlew assembleDebug --no-daemon
         working-directory: android
 
-      - name: Renomear com a data e o commit
+      - name: Guardar o APK do aplicativo
         run: |
           mkdir -p entrega
           cp android/app/build/outputs/apk/debug/app-debug.apk \
              "entrega/ekklesia-music-$(date +%Y-%m-%d)-${GITHUB_SHA::7}.apk"
+
+      # Versão de teste: mesmo app, sem nuvem e com outro identificador, para
+      # instalar ao lado do de verdade e experimentar sem risco nenhum.
+      - name: Preparar a versão de teste
+        run: npm run build:teste
+
+      - name: Compilar o APK de teste
+        run: |
+          rm -rf android
+          npx cap add android --config capacitor.config.teste.json
+          npx cap sync android --config capacitor.config.teste.json
+          cd android && ./gradlew assembleDebug --no-daemon
+
+      - name: Guardar o APK de teste
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk \
+             "entrega/ekklesia-TESTE-$(date +%Y-%m-%d)-${GITHUB_SHA::7}.apk"
           ls -lh entrega/
 
-      - name: Publicar o APK para download
+      - name: Publicar os APKs para download
         uses: actions/upload-artifact@v4
         with:
           name: ekklesia-music-apk

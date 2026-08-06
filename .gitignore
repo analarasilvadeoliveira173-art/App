@@ -1,4 +1,6 @@
 node_modules/
+www-teste/
+capacitor.config.teste.json
 package-lock.json
 
 # Build nativo (gerado por `npx cap add android`)

@@ -2834,20 +2834,40 @@ function salvarPreferencias(){
   if(salvarPreferenciasLocal()){ aplicarMarca(); toast('Personalização salva.'); }
   else toast('Não foi possível salvar a personalização.','bad');
 }
+/* Monta o conteúdo do backup a partir dos dados EM USO.
+   D é o que está na tela: na nuvem vem do servidor, no modo local vem do
+   aparelho. Ler de `mem` pegava sempre a cópia do aparelho — que, na nuvem,
+   guarda os dados de exemplo, não os da igreja. */
+function montarBackup(){
+  const dados={versao:2,exportado_em:new Date().toISOString(),
+    origem:(MODO_NUVEM&&!usandoDadosLocais)?'nuvem':'aparelho',
+    configuracoes:settings,dados:{}};
+  STORAGE_TABLES.forEach(k=>{
+    /* Cópia, não referência: o backup precisa ser um retrato do momento,
+       imune a qualquer alteração que venha depois. */
+    const origem = Array.isArray(D[k]) ? D[k] : (mem[k]||[]);
+    dados.dados[k] = origem.map(r=>({...r}));
+  });
+  return dados;
+}
+function totalDoBackup(b){
+  return STORAGE_TABLES.reduce((n,k)=>n+((b.dados[k]||[]).length),0);
+}
 async function baixarBackup(){
-  const dados={versao:1,exportado_em:new Date().toISOString(),configuracoes:settings,dados:{}};
-  STORAGE_TABLES.forEach(k=>dados.dados[k]=mem[k]||[]);
+  const dados=montarBackup();
+  if(!totalDoBackup(dados)){ toast('Não há dados para salvar no backup.','bad'); return; }
   const json=JSON.stringify(dados,null,2), nome='ekklesia-backup-'+hojeISO()+'.json';
   const FS=capPlugin('Filesystem');
   if(FS){
     try{
       const r=await FS.writeFile({path:nome,data:json,directory:'DOCUMENTS',encoding:'utf8'});
       const SH=capPlugin('Share'); if(SH) await SH.share({title:nome,url:r.uri});
-      toast('Backup salvo em Documentos.'); return;
+      toast('Backup salvo em Documentos: '+(D.membros||[]).length+' membros, '+(D.cultos||[]).length+' cultos.'); return;
     }catch(e){ console.error(e); toast('Erro ao salvar o backup no app.','bad'); return; }
   }
   const blob=new Blob([json],{type:'application/json'}),a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);a.download=nome;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500);toast('Backup baixado.');
+  a.href=URL.createObjectURL(blob);a.download=nome;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500);
+  toast('Backup baixado: '+(D.membros||[]).length+' membros, '+(D.cultos||[]).length+' cultos.');
 }
 async function selecionarBackup(input){
   const file=input.files&&input.files[0]; if(!file)return;

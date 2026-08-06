@@ -246,6 +246,18 @@ try {
   ok('trocar de tela fecha a janela que estava aberta',
     !abriuJanela || (await pagina.locator('#ov').count()) === 0);
 
+  console.log('\nBackup');
+  // O backup precisa gravar o que está na tela, não a cópia do aparelho:
+  // na nuvem as duas divergem, e gravar a errada salva dados de exemplo.
+  const backup = await pagina.evaluate(() => {
+    D.membros.push({ id: 'so-em-D', nome: 'Aparece Só Nos Dados Em Uso', status: 'ativo' });
+    const b = window.montarBackup();
+    D.membros.pop();
+    return { total: window.totalDoBackup(b), temOEsperado: (b.dados.membros || []).some(m => m.id === 'so-em-D') };
+  });
+  ok('o backup grava os dados em uso, não a cópia do aparelho', backup.temOEsperado);
+  ok('o backup não sai vazio', backup.total > 0, `${backup.total} registros`);
+
   console.log('\nPersistência');
   const antes = await pagina.evaluate(() => ({ l: D.louvores.length, a: D.avisos.length, c: D.cultos.length }));
   await pagina.reload({ waitUntil: 'networkidle' });
