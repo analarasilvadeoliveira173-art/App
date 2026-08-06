@@ -776,6 +776,7 @@ body.is-offline .net-bar{display:flex}
       </form>
 
       <p id="lg-hint" class="hint" style="text-align:center;margin-top:14px"></p>
+      <div class="access-demo"><button type="button" onclick="esqueciSenha()">Esqueci minha senha</button></div>
       <div class="access-demo hidden" id="demoAccessBox"><button type="button" onclick="preencherAcessoTeste()">Preencher acesso de teste</button></div>
       <div class="access-demo hidden" id="trocarIgrejaBox"><button type="button" onclick="trocarIgreja()">Entrar em outra igreja</button></div>
     </main>
@@ -2746,6 +2747,7 @@ function renderUsuarios(){
         <td>${u.membro_id?esc(nomeMembro(u.membro_id)):'—'}</td>
         <td>${u.ativo!==false?'<span class="chip chip-ok">Sim</span>':'<span class="chip chip-muted">Não</span>'}</td>
         <td><div class="actions-cell"><button class="ico-btn" onclick="modalUsuario('${u.id}')" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
+          <button class="ico-btn" onclick="codigoRecuperacao('${u.id}')" title="Gerar código de recuperação"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.6 7.6a5 5 0 11-7.1 7.1 5 5 0 017.1-7.1zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3"/></svg></button>
           ${u.usuario!=='admin'?`<button class="ico-btn danger" onclick="excluirUsuario('${u.id}')" title="Excluir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>`:''}
         </div></td></tr>`).join('')}
     </tbody></table></div></div>`;
@@ -2797,6 +2799,26 @@ function modalUsuario(id){
       toast(e.message||'Erro ao salvar.','bad');
     }
   };
+}
+/* A pessoa esqueceu a senha. Em vez de o líder inventar uma nova e ficar
+   sabendo dela, ele gera um código de uso único e manda no WhatsApp — quem
+   escolhe a senha nova é a própria pessoa, e ninguém mais a conhece. */
+async function codigoRecuperacao(id){
+  const u=D.usuarios.find(x=>x.id===id); if(!u) return;
+  if(!naNuvem()){
+    toast('Sem nuvem, redefina a senha direto em Editar.','bad'); return;
+  }
+  try{
+    const r=await chamarAcesso({acao:'gerar_recuperacao',usuario_id:id},true);
+    modal('Código para '+esc(u.nome),`
+      <p style="margin-top:0;color:var(--muted);font-size:var(--t0)">Mande este código para a pessoa. Ela abre o aplicativo,
+      toca em <b>Esqueci minha senha</b> e escolhe a senha nova sozinha.</p>
+      <div class="kv"><span>Código da igreja</span><b>${esc(r.codigo_igreja||nuvem.codigo||'—')}</b></div>
+      <div class="kv"><span>Entra digitando</span><b>${esc(r.nome||u.nome)}</b></div>
+      <div class="kv"><span>Código de recuperação</span><b style="letter-spacing:.12em;font-size:var(--t1)">${esc(r.codigo)}</b></div>
+      <div class="hint" style="margin-top:var(--e3)">Vale por ${r.minutos} minutos e serve uma vez só. Gerar outro cancela este.</div>`,
+      `<button class="btn btn-primary" onclick="closeModal()">Pronto</button>`);
+  }catch(e){ toast(e.message||'Não consegui gerar o código.','bad'); }
 }
 function excluirUsuario(id){ const u=D.usuarios.find(x=>x.id===id); if(!u) return; if(u.usuario==='admin'){toast('Não é possível excluir o admin.','bad');return;}
   confirmar(`Excluir o acesso de ${u.nome}?`, async()=>{
@@ -3051,6 +3073,52 @@ async function entrarNaNuvem(codigo, nome, senha){
   const meta = (dados.user && dados.user.user_metadata) || {};
   return { nome: meta.nome || nome, papel: meta.papel || 'membro',
            membro_id: meta.membro_id || null, usuario: meta.usuario || null };
+}
+
+/* ---------- Esqueci minha senha ----------
+   Não existe "clique no link que mandamos": os endereços de login são
+   técnicos e não recebem e-mail. O caminho é o mesmo por onde o
+   ministério já se fala — a liderança gera um código e manda no grupo. */
+function esqueciSenha(){
+  if(!naNuvem()){
+    modal('Esqueci minha senha',`
+      <p style="margin-top:0">Neste aparelho a senha é guardada aqui mesmo, sem servidor — então
+      quem redefine é a liderança, em <b>Usuários</b>.</p>
+      <p style="color:var(--muted);font-size:var(--t0);margin-bottom:0">Procure quem cuida do ministério e peça uma senha nova.</p>`,
+      `<button class="btn btn-primary" onclick="closeModal()">Entendi</button>`);
+    return;
+  }
+  const codigoGuardado = val('lg-igreja') || nuvem.codigo || '';
+  modal('Esqueci minha senha',`
+    <p style="margin-top:0;color:var(--muted);font-size:var(--t0)">Peça à liderança um <b>código de recuperação</b>. Ele vale por
+    poucos minutos e só serve uma vez.</p>
+    <div class="field"><label for="rc-igreja">Código da igreja</label>
+      <input id="rc-igreja" class="input" value="${esc(codigoGuardado)}" autocapitalize="characters" autocomplete="off" spellcheck="false"></div>
+    <div class="field"><label for="rc-nome">Seu nome</label>
+      <input id="rc-nome" class="input" placeholder="Como você está cadastrado" autocapitalize="words"></div>
+    <div class="field"><label for="rc-codigo">Código de recuperação</label>
+      <input id="rc-codigo" class="input" placeholder="Ex.: 7KM-P4Q" autocapitalize="characters" autocomplete="off" spellcheck="false"></div>
+    <div class="field"><label for="rc-senha">Nova senha</label>
+      <input id="rc-senha" class="input" type="password" autocomplete="new-password" placeholder="Mínimo de ${SENHA_MINIMA} caracteres"></div>
+    <div class="field"><label for="rc-senha2">Repita a nova senha</label>
+      <input id="rc-senha2" class="input" type="password" autocomplete="new-password" placeholder="A mesma de cima"></div>`,
+    `<button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" id="okBtn">Trocar a senha</button>`);
+  document.getElementById('okBtn').onclick=async()=>{
+    const igreja=val('rc-igreja'), nome=val('rc-nome'), codigo=val('rc-codigo');
+    const s1=val('rc-senha'), s2=val('rc-senha2');
+    if(!igreja||!nome||!codigo){toast('Preencha a igreja, seu nome e o código.','bad');return;}
+    if(!s1||s1!==s2){toast('As senhas não conferem.','bad');return;}
+    if(s1.length<SENHA_MINIMA){toast(`A senha precisa ter pelo menos ${SENHA_MINIMA} caracteres.`,'bad');return;}
+    try{
+      await chamarAcesso({acao:'usar_recuperacao',codigo_igreja:igreja,nome,codigo,nova_senha:s1});
+      closeModal();
+      /* Já deixa o caminho pronto: só falta digitar a senha que acabou de criar. */
+      const ci=document.getElementById('lg-igreja'); if(ci) ci.value=igreja;
+      const cu=document.getElementById('lg-user'); if(cu) cu.value=nome;
+      const cp=document.getElementById('lg-pin'); if(cp){ cp.value=''; cp.focus(); }
+      toast('Senha trocada. Agora é só entrar.');
+    }catch(e){ toast(e.message||'Não consegui trocar a senha.','bad'); }
+  };
 }
 
 async function entrar(){

@@ -160,6 +160,39 @@ com comandos.
 
 ---
 
+## Quando alguém esquecer a senha
+
+Não existe "clique no link que mandamos": os endereços de login são técnicos
+e não recebem e-mail. O caminho é o mesmo por onde o ministério já se fala.
+
+**Um integrante esqueceu.** A liderança abre **Usuários**, clica no ícone de
+chave na linha da pessoa e recebe um código curto, tipo `7KM-P4Q`. Manda no
+WhatsApp. A pessoa abre o aplicativo, toca em **Esqueci minha senha**, digita
+o código e escolhe a senha nova.
+
+O código vale **30 minutos**, serve **uma vez só**, e gerar outro cancela o
+anterior. Repare que nem a liderança fica sabendo a senha nova — quem escolhe
+é a própria pessoa.
+
+**O administrador da igreja esqueceu.** Aí não há ninguém acima dele para
+gerar o código, e quem resolve é você, com a chave mestra:
+
+```bash
+curl -X POST 'https://SEU-PROJETO.supabase.co/functions/v1/acesso' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "acao": "resetar_admin",
+    "chave_mestra": "a-chave-que-voce-guardou",
+    "codigo": "MONTESIAO-2026",
+    "nova_senha": "senha-provisoria-2026"
+  }'
+```
+
+Passe a senha provisória para o cliente e peça que ele troque em **Meu
+perfil** assim que entrar.
+
+---
+
 ## Suspender quem parou de pagar
 
 No **Table Editor** → tabela **`igrejas`**, mude a coluna `situacao` da linha

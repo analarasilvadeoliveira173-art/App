@@ -56,6 +56,11 @@ begin
   delete from public.tentativas_acesso where origem = 'origem-de-teste';
   insert into public.tentativas_acesso (origem,codigo) values ('origem-de-teste','TESTE-ALFA');
 
+  insert into public.usuarios (id,igreja_id,nome,usuario,papel,ativo) values
+    ('us-teste-a1', ig_a, 'Ana Teste', 'ana', 'membro', true);
+  insert into public.recuperacoes (igreja_id,usuario_id,codigo_hash,expira_em) values
+    (ig_a, 'us-teste-a1', 'embaralhado-de-teste', now() + interval '30 minutes');
+
   raise notice 'Cenário criado. Rodando os casos...';
 end $$;
 
@@ -204,6 +209,12 @@ begin
   select count(*) into n from public.tentativas_acesso;
   caso := 'Alguém logado lendo o registro de tentativas';
   veredito := case when n = 0 then 'PASSOU' else 'FALHOU — leu '||n||' tentativa(s)' end;
+  return next;
+
+  -- Ler os códigos de recuperação seria entrar na conta de qualquer um.
+  select count(*) into n from public.recuperacoes;
+  caso := 'Alguém logado lendo os códigos de recuperação';
+  veredito := case when n = 0 then 'PASSOU' else 'FALHOU — leu '||n||' código(s)' end;
   return next;
 
   reset role;

@@ -403,6 +403,25 @@ create index if not exists tentativas_acesso_busca
 -- Sem nenhuma política: ninguém, nem logado, lê ou escreve nesta
 -- tabela pelo aplicativo. Só a função do servidor encosta nela.
 alter table public.tentativas_acesso enable row level security;
+
+-- Quem esquece a senha não tem para onde correr: os endereços de login
+-- são técnicos e não recebem e-mail. Então a liderança gera um código de
+-- uso único, manda pelo WhatsApp, e a pessoa troca a senha sozinha.
+-- O código não fica guardado, só o embaralhado dele — nem abrindo esta
+-- tabela dá para ler o que foi gerado.
+create table if not exists public.recuperacoes (
+  id          bigserial primary key,
+  igreja_id   text not null references public.igrejas(id) on delete cascade,
+  usuario_id  text not null references public.usuarios(id) on delete cascade,
+  codigo_hash text not null,
+  expira_em   timestamptz not null,
+  usado_em    timestamptz,
+  criado_em   timestamptz not null default now()
+);
+create index if not exists recuperacoes_busca
+  on public.recuperacoes (usuario_id, expira_em desc);
+
+alter table public.recuperacoes enable row level security;
 -- Troca as letras acentuadas mais comuns do português. Evita depender
 -- da extensão unaccent, que nem todo projeto tem habilitada.
 create or replace function public.unaccent_simples(t text)

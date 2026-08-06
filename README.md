@@ -176,6 +176,11 @@ ela fica embaralhada no servidor. Cada um pode trocar a sua em **Meu perfil**.
 No modo aparelho, a senha é definida na própria ficha do membro e é
 obrigatória: sem ela a pessoa não consegue acessar.
 
+**Esqueceu a senha?** Na nuvem, a liderança gera um código de uso único em
+**Usuários** (ícone de chave) e manda no WhatsApp; a pessoa toca em **Esqueci
+minha senha** na tela de entrada e escolhe a senha nova sozinha — nem a
+liderança fica sabendo qual é. O código vale 30 minutos e serve uma vez só.
+
 ---
 
 ## Sistema visual

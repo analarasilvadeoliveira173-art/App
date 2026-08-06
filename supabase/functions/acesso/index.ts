@@ -7,12 +7,15 @@
    fica guardada e nunca chega ao celular de ninguém.
 
    O que esta função faz:
-     entrar         — confere nome e senha e devolve o crachá
-     criar_igreja   — só você, com a chave mestra (venda nova)
-     criar_acesso   — o líder cria o login de um integrante
-     trocar_senha   — o líder redefine a senha de alguém
-     atualizar_acesso — muda nome, papel ou vínculo (e o crachá junto)
-     remover_acesso — o líder tira o acesso de alguém
+     entrar             — confere nome e senha e devolve o crachá
+     usar_recuperacao   — troca a senha com o código que a liderança mandou
+     criar_igreja       — só você, com a chave mestra (venda nova)
+     resetar_admin      — só você, quando o administrador esquece a senha
+     criar_acesso       — o líder cria o login de um integrante
+     trocar_senha       — o líder redefine a senha de alguém
+     gerar_recuperacao  — o líder gera o código de uso único
+     atualizar_acesso   — muda nome, papel ou vínculo (e o crachá junto)
+     remover_acesso     — o líder tira o acesso de alguém
 
    Publicar:  supabase functions deploy acesso --no-verify-jwt
    O passo a passo está em docs/configurar-supabase.md
@@ -98,6 +101,56 @@ async function limparErros(origem: string, codigo: string) {
    são comparados, para "João" e "joao" serem a mesma pessoa. */
 function chaveNome(t: string) {
   return semAcento(String(t ?? '')).trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+/* ------------------------------------------------------------
+   Recuperação de senha
+
+   Os endereços de login são técnicos e não recebem e-mail, então o
+   "clique no link que mandamos" não existe aqui. O que existe é o
+   WhatsApp do ministério: a liderança gera um código de uso único e
+   manda para a pessoa, que troca a senha sozinha.
+
+   O código vale 30 minutos e some depois de usado. Guardamos só o
+   embaralhado dele — nem abrindo a tabela dá para ler o que foi gerado.
+   ------------------------------------------------------------ */
+const VALIDADE_MINUTOS = 30;
+const ALFABETO = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';  // sem 0/O e 1/I, que confundem
+
+function novoCodigoRecuperacao() {
+  const bytes = crypto.getRandomValues(new Uint8Array(6));
+  const letras = Array.from(bytes, (b) => ALFABETO[b % ALFABETO.length]);
+  return letras.slice(0, 3).join('') + '-' + letras.slice(3).join('');  // ABC-DEF, fácil de ditar
+}
+
+async function embaralhar(codigo: string) {
+  const dados = new TextEncoder().encode(codigo.toUpperCase().replace(/[^A-Z0-9]/g, ''));
+  const digest = await crypto.subtle.digest('SHA-256', dados);
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/* Compara sem deixar o tempo de resposta contar quantos caracteres bateram. */
+function mesmoTexto(a: string, b: string) {
+  if (a.length !== b.length) return false;
+  let diferenca = 0;
+  for (let i = 0; i < a.length; i++) diferenca |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diferenca === 0;
+}
+
+/* Acha quem é a pessoa pelo que ela digitou: o login, o nome completo ou
+   só o primeiro nome quando não houver dúvida. Mesma regra da entrada. */
+type Acesso = { id?: string; usuario: string; nome: string; ativo?: boolean };
+function acharPorNome(lista: Acesso[], nome: string) {
+  const ativos = lista.filter((u) => u.ativo !== false);
+  const chave = chaveNome(nome);
+  const porLogin = ativos.filter((u) => chaveNome(u.usuario) === chave);
+  if (porLogin.length === 1) return { achado: porLogin[0], ambiguo: false };
+  const porNome = ativos.filter((u) => chaveNome(u.nome) === chave);
+  if (porNome.length === 1) return { achado: porNome[0], ambiguo: false };
+  if (porNome.length > 1) return { achado: null, ambiguo: true };
+  const porPrimeiro = ativos.filter((u) => chaveNome(u.nome).split(' ')[0] === chave);
+  if (porPrimeiro.length === 1) return { achado: porPrimeiro[0], ambiguo: false };
+  return { achado: null, ambiguo: porPrimeiro.length > 1 };
 }
 
 /* Quem está chamando? Confere o crachá e devolve igreja e papel. */
@@ -202,20 +255,8 @@ Deno.serve(async (req) => {
 
     const { data: acessos } = await admin.from('usuarios')
       .select('usuario,nome,ativo').eq('igreja_id', igrejaEntrada.id);
-    const ativos = (acessos ?? []).filter((u) => u.ativo !== false);
-    const chave = chaveNome(nome);
-
-    let usuario: string | null = null;
-    let ambiguo = false;
-    const porLogin = ativos.filter((u) => chaveNome(u.usuario) === chave);
-    const porNome = ativos.filter((u) => chaveNome(u.nome) === chave);
-    const porPrimeiro = ativos.filter((u) => chaveNome(u.nome).split(' ')[0] === chave);
-
-    if (porLogin.length === 1) usuario = porLogin[0].usuario;
-    else if (porNome.length === 1) usuario = porNome[0].usuario;
-    else if (porNome.length > 1) ambiguo = true;
-    else if (porPrimeiro.length === 1) usuario = porPrimeiro[0].usuario;
-    else if (porPrimeiro.length > 1) ambiguo = true;
+    const { achado, ambiguo } = acharPorNome(acessos ?? [], nome);
+    const usuario = achado?.usuario ?? null;
 
     /* Só este caso precisa de resposta própria: sem ela, quem tem xará
        na equipe nunca descobriria que precisa digitar o nome completo. */
@@ -243,6 +284,88 @@ Deno.serve(async (req) => {
 
     await limparErros(origem, codigo);
     return responder(await login.json());
+  }
+
+  /* ---------- Trocar a senha com o código que a liderança mandou ---------- */
+  if (acao === 'usar_recuperacao') {
+    const codigoIgreja = (corpo.codigo_igreja ?? '').trim().toUpperCase();
+    const { nome, codigo, nova_senha } = corpo;
+    if (!codigoIgreja || !nome || !codigo || !nova_senha) {
+      return erro('Preencha o código da igreja, seu nome, o código recebido e a nova senha.');
+    }
+    if (nova_senha.length < 6) return erro('A nova senha precisa de 6 caracteres ou mais.');
+
+    const origem = origemDaChamada(req);
+    if (await tentativasDemais(origem, codigoIgreja)) {
+      return erro(`Muitas tentativas seguidas. Espere ${JANELA_MINUTOS} minutos e tente de novo.`, 429);
+    }
+
+    /* Uma resposta só para tudo que der errado — nome que não existe,
+       código trocado, código vencido. Senão o próprio formulário de
+       recuperação viraria o jeito de descobrir quem é da equipe. */
+    const recusar = async () => {
+      await anotarErro(origem, codigoIgreja);
+      return erro('Código de recuperação inválido ou vencido. Peça outro à liderança.', 401);
+    };
+
+    const { data: igrejaRec } = await admin.from('igrejas')
+      .select('id,situacao').ilike('codigo', codigoIgreja).maybeSingle();
+    if (!igrejaRec) return await recusar();
+    if (igrejaRec.situacao === 'suspensa') {
+      return erro('O acesso desta igreja está suspenso. Fale com quem contratou o aplicativo.', 403);
+    }
+
+    const { data: acessosRec } = await admin.from('usuarios')
+      .select('id,usuario,nome,ativo,auth_id').eq('igreja_id', igrejaRec.id);
+    const { achado } = acharPorNome(acessosRec ?? [], nome);
+    if (!achado?.id) return await recusar();
+
+    const { data: pedidos } = await admin.from('recuperacoes')
+      .select('id,codigo_hash,expira_em')
+      .eq('usuario_id', achado.id).is('usado_em', null)
+      .gt('expira_em', new Date().toISOString());
+
+    const enviado = await embaralhar(codigo);
+    const pedido = (pedidos ?? []).find((p) => mesmoTexto(p.codigo_hash, enviado));
+    if (!pedido) return await recusar();
+
+    const alvo = (acessosRec ?? []).find((u) => u.id === achado.id) as { auth_id?: string };
+    if (!alvo?.auth_id) return await recusar();
+
+    const { error: eSenha } = await admin.auth.admin
+      .updateUserById(alvo.auth_id, { password: nova_senha });
+    if (eSenha) return erro('Não consegui trocar a senha: ' + eSenha.message, 500);
+
+    /* Usado é usado: some o pedido atendido e os outros pendentes junto,
+       para um código antigo no WhatsApp não valer mais nada. */
+    await admin.from('recuperacoes').delete().eq('usuario_id', achado.id);
+    await limparErros(origem, codigoIgreja);
+    return responder({ ok: true, entrar_com: achado.nome });
+  }
+
+  /* ---------- Resgate do administrador, só com a chave mestra ----------
+     Quando quem esquece a senha é o próprio administrador da igreja, não
+     há liderança acima dele para gerar código. Aí quem resolve é você. */
+  if (acao === 'resetar_admin') {
+    if (!CHAVE_MESTRA || corpo.chave_mestra !== CHAVE_MESTRA) {
+      return erro('Chave mestra inválida.', 401);
+    }
+    const codigoIgreja = (corpo.codigo ?? '').trim().toUpperCase();
+    const { nova_senha } = corpo;
+    if (!codigoIgreja || !nova_senha) return erro('Informe o código da igreja e a nova senha.');
+    if (nova_senha.length < 6) return erro('A nova senha precisa de 6 caracteres ou mais.');
+
+    const { data: igrejaAdm } = await admin.from('igrejas')
+      .select('id').ilike('codigo', codigoIgreja).maybeSingle();
+    if (!igrejaAdm) return erro('Igreja não encontrada.', 404);
+
+    const { data: adm } = await admin.from('usuarios')
+      .select('auth_id').eq('igreja_id', igrejaAdm.id).eq('usuario', 'admin').maybeSingle();
+    if (!adm?.auth_id) return erro('Essa igreja não tem acesso de administrador.', 404);
+
+    const { error } = await admin.auth.admin.updateUserById(adm.auth_id, { password: nova_senha });
+    if (error) return erro('Não consegui trocar a senha: ' + error.message, 500);
+    return responder({ ok: true, codigo: codigoIgreja, entrar_com: 'admin' });
   }
 
   /* ---------- Daqui para baixo, só líder ou administrador ---------- */
@@ -345,6 +468,38 @@ Deno.serve(async (req) => {
       });
     }
     return responder({ ok: true });
+  }
+
+  /* ---------- A liderança gera o código para mandar no WhatsApp ---------- */
+  if (acao === 'gerar_recuperacao') {
+    const { usuario_id } = corpo;
+    if (!usuario_id) return erro('Informe de quem é a senha esquecida.');
+
+    const { data: alvo } = await admin.from('usuarios')
+      .select('nome,usuario,papel,ativo').eq('id', usuario_id).eq('igreja_id', igreja.id).maybeSingle();
+    if (!alvo) return erro('Acesso não encontrado nesta igreja.', 404);
+    if (alvo.ativo === false) return erro('Esse acesso está desativado. Reative antes de gerar o código.');
+    if (alvo.papel === 'admin' && chamador.papel !== 'admin') {
+      return erro('Só um administrador gera código para outro administrador.', 403);
+    }
+
+    const codigo = novoCodigoRecuperacao();
+    const expira = new Date(Date.now() + VALIDADE_MINUTOS * 60_000);
+
+    // Um código de cada vez: gerar outro invalida o anterior, então
+    // o que ficou para trás no WhatsApp deixa de servir.
+    await admin.from('recuperacoes').delete().eq('usuario_id', usuario_id);
+    const { error } = await admin.from('recuperacoes').insert({
+      igreja_id: igreja.id, usuario_id,
+      codigo_hash: await embaralhar(codigo), expira_em: expira.toISOString(),
+    });
+    if (error) return erro('Não consegui gerar o código: ' + error.message, 500);
+
+    // Varre os vencidos de todo mundo, de carona.
+    await admin.from('recuperacoes').delete().lt('expira_em', new Date().toISOString());
+
+    return responder({ ok: true, codigo, nome: alvo.nome,
+                       minutos: VALIDADE_MINUTOS, codigo_igreja: igreja.codigo });
   }
 
   if (acao === 'remover_acesso') {

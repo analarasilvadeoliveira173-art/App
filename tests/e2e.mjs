@@ -174,6 +174,21 @@ try {
   ok('aceita senha de 6 caracteres ou mais', (await pagina.locator('#ov').count()) === 0);
   await pagina.evaluate(() => window.closeModal());
 
+  console.log('\nEsqueci minha senha');
+  await pagina.evaluate(() => window.sair());
+  await pagina.waitForTimeout(300);
+  await pagina.locator('#cfBtn').click();           // confirma a saída
+  await pagina.waitForTimeout(700);
+  const linkEsqueci = pagina.getByRole('button', { name: /Esqueci minha senha/i });
+  ok('a tela de entrada oferece o caminho de quem esqueceu', await linkEsqueci.isVisible());
+  await linkEsqueci.click();
+  await pagina.waitForTimeout(400);
+  const textoEsqueci = await pagina.locator('#ov .modal-body').textContent();
+  // Sem nuvem não há servidor para gerar código: aqui a saída é a liderança.
+  ok('sem nuvem, manda procurar a liderança', /liderança/i.test(textoEsqueci), textoEsqueci.slice(0, 80));
+  await pagina.evaluate(() => window.closeModal());
+  await abrirEEntrar();
+
   console.log('\nCadastros e segurança de texto');
   await pagina.evaluate(() => window.ir('louvores'));
   await pagina.waitForTimeout(400);
