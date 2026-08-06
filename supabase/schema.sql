@@ -373,12 +373,36 @@ create policy "minha_igreja_leitura" on public.igrejas
 
 -- ============================================================
 -- 4. ENTRADA NO APLICATIVO
---    A pessoa digita o código da igreja, o nome e a senha. O
---    aplicativo precisa transformar isso no endereço técnico que
---    o Supabase usa para autenticar — é o que esta função faz.
---    Ela não devolve nenhum dado da igreja: sem a senha correta,
---    saber esse endereço não serve para nada.
+--    A pessoa digita o código da igreja, o nome e a senha. Quem
+--    confere tudo isso é a função "acesso", que roda no servidor
+--    (supabase/functions/acesso). O aplicativo manda os três dados
+--    e recebe uma resposta só: entrou ou não entrou.
+--
+--    Por que não é o aplicativo que confere: antes ele perguntava
+--    ao banco o endereço técnico de fulano e só depois tentava a
+--    senha. A resposta era diferente para nome que existe e nome
+--    que não existe — com o código da igreja em mãos, que é ditado
+--    para a equipe toda, dava para descobrir o nome de cada
+--    integrante uma pergunta por vez. Agora nome errado e senha
+--    errada dão exatamente a mesma resposta.
 -- ============================================================
+
+-- Toda tentativa que dá errado fica anotada aqui, e depois de
+-- algumas seguidas do mesmo lugar a porta fecha por uns minutos.
+-- Quem acerta a senha zera a própria contagem, então ninguém da
+-- equipe esbarra nisso no domingo de manhã.
+create table if not exists public.tentativas_acesso (
+  id      bigserial primary key,
+  origem  text not null,
+  codigo  text not null,
+  quando  timestamptz not null default now()
+);
+create index if not exists tentativas_acesso_busca
+  on public.tentativas_acesso (origem, codigo, quando desc);
+
+-- Sem nenhuma política: ninguém, nem logado, lê ou escreve nesta
+-- tabela pelo aplicativo. Só a função do servidor encosta nela.
+alter table public.tentativas_acesso enable row level security;
 -- Troca as letras acentuadas mais comuns do português. Evita depender
 -- da extensão unaccent, que nem todo projeto tem habilitada.
 create or replace function public.unaccent_simples(t text)
@@ -451,7 +475,11 @@ begin
   return public.montar_email(v_igreja.codigo, v_usuario);
 end $$;
 
-grant execute on function public.email_de_acesso(text,text) to anon, authenticated;
+-- Esta função continua existindo para consulta pela liderança no SQL
+-- Editor ("com que nome fulano entra?"), mas o aplicativo não a chama
+-- mais e ninguém de fora pode executá-la: era ela que respondia de um
+-- jeito para nome que existe e de outro para nome que não existe.
+revoke execute on function public.email_de_acesso(text,text) from anon, authenticated, public;
 
 -- ============================================================
 -- 5. CONFERIR SE DEU CERTO

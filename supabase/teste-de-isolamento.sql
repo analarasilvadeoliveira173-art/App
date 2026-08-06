@@ -53,6 +53,9 @@ begin
     ('pr-teste-a1', ig_a, m_a1, 'ct-teste-a', 'pendente'),
     ('pr-teste-a2', ig_a, m_a2, 'ct-teste-a', 'pendente');
 
+  delete from public.tentativas_acesso where origem = 'origem-de-teste';
+  insert into public.tentativas_acesso (origem,codigo) values ('origem-de-teste','TESTE-ALFA');
+
   raise notice 'Cenário criado. Rodando os casos...';
 end $$;
 
@@ -194,7 +197,23 @@ begin
   veredito := case when n = 0 then 'PASSOU' else 'FALHOU — leu '||n||' culto(s) sem pertencer a igreja nenhuma' end;
   return next;
 
+  -- ============ 7. Nada de descobrir quem é da equipe ============
+  -- A função que traduzia nome em endereço de login respondia de um
+  -- jeito para quem existe e de outro para quem não existe. Ela agora
+  -- é só da liderança, pelo SQL Editor.
+  select count(*) into n from public.tentativas_acesso;
+  caso := 'Alguém logado lendo o registro de tentativas';
+  veredito := case when n = 0 then 'PASSOU' else 'FALHOU — leu '||n||' tentativa(s)' end;
+  return next;
+
   reset role;
+
+  caso := 'Visitante executando a busca de login por nome';
+  veredito := case
+    when not has_function_privilege('anon','public.email_de_acesso(text,text)','execute')
+     and not has_function_privilege('authenticated','public.email_de_acesso(text,text)','execute')
+    then 'PASSOU' else 'FALHOU — a função ainda pode ser chamada de fora' end;
+  return next;
 end $$;
 
 -- ---------- Resultado ----------
@@ -203,6 +222,7 @@ select caso, veredito from public.__teste_isolamento();
 -- ---------- Limpeza ----------
 drop function if exists public.__teste_isolamento();
 delete from public.igrejas where id in ('ig-teste-alfa','ig-teste-beta');
+delete from public.tentativas_acesso where origem = 'origem-de-teste';
 
 -- Confere que não sobrou nada do teste:
 select 'sobrou dado de teste' as aviso, count(*) as quantidade

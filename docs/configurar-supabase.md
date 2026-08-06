@@ -80,7 +80,9 @@ clientes; com ela, quem a tiver consegue.
 
 ## Passo 4 — Publicar a função de acessos
 
-É ela que cria os logins com segurança. Precisa ser publicada uma vez.
+É ela que confere nome e senha na hora de entrar e que cria os logins com
+segurança. **Sem esse passo ninguém consegue entrar no aplicativo** — não é
+opcional. Precisa ser publicada uma vez.
 
 **Pelo computador** (jeito recomendado). No terminal, dentro da pasta do
 projeto:
@@ -184,6 +186,37 @@ select tablename, rowsecurity as protegida
 
 Todas as linhas precisam mostrar `protegida = true`. Se alguma estiver
 `false`, os dados daquela tabela estão abertos — rode o `schema.sql` de novo.
+
+Depois, para a prova de verdade: abra o arquivo
+**`supabase/teste-de-isolamento.sql`**, cole no SQL Editor e clique em **Run**.
+Ele cria duas igrejas de mentira, tenta invadir uma a partir da outra e apaga
+tudo no fim. **Todas** as linhas do resultado precisam dizer `PASSOU`. Se
+alguma disser `FALHOU`, aquele caminho está aberto e não dá para vender assim.
+
+---
+
+## O freio de tentativas
+
+O código da igreja não é segredo: ele é ditado para a equipe inteira e acaba
+em grupo de WhatsApp. Por isso a entrada tem um freio.
+
+- Nome errado e senha errada dão **exatamente a mesma resposta**. Não dá para
+  ficar chutando nomes até descobrir quem é da equipe.
+- Depois de **10 tentativas erradas em 10 minutos** vindas do mesmo lugar, a
+  entrada naquela igreja fecha por alguns minutos.
+- Quem **acerta** a senha zera a própria contagem. Um integrante que entra
+  todo domingo nunca esbarra nisso.
+
+O registro fica na tabela `tentativas_acesso`, que ninguém lê pelo aplicativo,
+e se limpa sozinha.
+
+Vale também apertar o limite do próprio Supabase, que é uma segunda camada
+independente do aplicativo: **Authentication → Rate Limits**, e deixe
+*"Sign in / Sign up"* no menor valor que a sua equipe comporta (30 por hora já
+é bastante para uma igreja).
+
+**Senhas precisam de 6 caracteres ou mais.** Era 4, e 4 dígitos são só dez mil
+combinações — pouco demais para segurar alguém insistindo.
 
 ---
 

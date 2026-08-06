@@ -7,6 +7,7 @@
    fica guardada e nunca chega ao celular de ninguém.
 
    O que esta função faz:
+     entrar         — confere nome e senha e devolve o crachá
      criar_igreja   — só você, com a chave mestra (venda nova)
      criar_acesso   — o líder cria o login de um integrante
      trocar_senha   — o líder redefine a senha de alguém
@@ -52,6 +53,51 @@ function montarEmail(codigo: string, usuario: string) {
 }
 function novoId(prefixo: string) {
   return prefixo + crypto.randomUUID().replace(/-/g, '').slice(0, 18);
+}
+
+/* ------------------------------------------------------------
+   Freio de tentativas
+
+   O código da igreja circula em grupo de WhatsApp — não é segredo.
+   Sem freio, quem tivesse o código poderia ficar chutando nomes e
+   senhas à vontade. Aqui cada tentativa que dá errado fica anotada, e
+   depois de LIMITE erros no mesmo lugar a porta fecha por um tempo.
+   Quem acerta zera a contagem: um integrante que entra todo domingo
+   nunca esbarra nisso.
+   ------------------------------------------------------------ */
+const LIMITE_TENTATIVAS = 10;
+const JANELA_MINUTOS = 10;
+
+function origemDaChamada(req: Request) {
+  const encaminhado = req.headers.get('x-forwarded-for') ?? '';
+  const ip = encaminhado.split(',')[0].trim() || req.headers.get('cf-connecting-ip') || '';
+  return ip || 'origem-desconhecida';
+}
+
+async function tentativasDemais(origem: string, codigo: string) {
+  const desde = new Date(Date.now() - JANELA_MINUTOS * 60_000).toISOString();
+  const { count } = await admin.from('tentativas_acesso')
+    .select('id', { count: 'exact', head: true })
+    .eq('origem', origem).eq('codigo', codigo).gte('quando', desde);
+  return (count ?? 0) >= LIMITE_TENTATIVAS;
+}
+
+async function anotarErro(origem: string, codigo: string) {
+  await admin.from('tentativas_acesso').insert({ origem, codigo });
+  // Varre o que já passou da validade. A tabela existe para contar os
+  // últimos minutos; guardar mais que isso só ocuparia espaço.
+  const ontem = new Date(Date.now() - 24 * 60 * 60_000).toISOString();
+  await admin.from('tentativas_acesso').delete().lt('quando', ontem);
+}
+
+async function limparErros(origem: string, codigo: string) {
+  await admin.from('tentativas_acesso').delete().eq('origem', origem).eq('codigo', codigo);
+}
+
+/* Sem acento, sem maiúscula e sem espaço sobrando — é assim que os nomes
+   são comparados, para "João" e "joao" serem a mesma pessoa. */
+function chaveNome(t: string) {
+  return semAcento(String(t ?? '')).trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
 /* Quem está chamando? Confere o crachá e devolve igreja e papel. */
@@ -116,6 +162,89 @@ Deno.serve(async (req) => {
     return responder({ ok: true, igreja_id: igrejaId, codigo: codigoLimpo, entrar_com: usuario });
   }
 
+  /* ------------------------------------------------------------
+     Entrada no aplicativo
+
+     Antes, o aplicativo perguntava ao banco "qual é o endereço técnico
+     de fulano?" e só depois tentava a senha. Quem tivesse o código da
+     igreja descobria, uma pergunta por vez, o nome de todo mundo — a
+     resposta era diferente para quem existia e para quem não existia.
+
+     Agora a conferência inteira acontece aqui. O aplicativo manda
+     código, nome e senha e recebe uma única resposta. Nome errado e
+     senha errada dão exatamente a mesma coisa, então não há o que
+     descobrir tentando.
+     ------------------------------------------------------------ */
+  if (acao === 'entrar') {
+    const codigo = (corpo.codigo ?? '').trim().toUpperCase();
+    const nome = corpo.nome ?? '';
+    const senha = corpo.senha ?? '';
+    if (!codigo) return erro('Digite o código da sua igreja.');
+    if (!nome || !senha) return erro('Digite seu nome e sua senha.');
+
+    const origem = origemDaChamada(req);
+    if (await tentativasDemais(origem, codigo)) {
+      return erro(`Muitas tentativas seguidas. Espere ${JANELA_MINUTOS} minutos e tente de novo.`, 429);
+    }
+
+    const { data: igrejaEntrada } = await admin.from('igrejas')
+      .select('id,codigo,situacao').ilike('codigo', codigo).maybeSingle();
+
+    /* O código da igreja não é segredo: ele é ditado para a equipe toda.
+       Dizer que está errado poupa a pessoa de culpar a própria senha. */
+    if (!igrejaEntrada) {
+      await anotarErro(origem, codigo);
+      return erro('Não encontrei esse código de igreja. Confira com a liderança.', 404);
+    }
+    if (igrejaEntrada.situacao === 'suspensa') {
+      return erro('O acesso desta igreja está suspenso. Fale com quem contratou o aplicativo.', 403);
+    }
+
+    const { data: acessos } = await admin.from('usuarios')
+      .select('usuario,nome,ativo').eq('igreja_id', igrejaEntrada.id);
+    const ativos = (acessos ?? []).filter((u) => u.ativo !== false);
+    const chave = chaveNome(nome);
+
+    let usuario: string | null = null;
+    let ambiguo = false;
+    const porLogin = ativos.filter((u) => chaveNome(u.usuario) === chave);
+    const porNome = ativos.filter((u) => chaveNome(u.nome) === chave);
+    const porPrimeiro = ativos.filter((u) => chaveNome(u.nome).split(' ')[0] === chave);
+
+    if (porLogin.length === 1) usuario = porLogin[0].usuario;
+    else if (porNome.length === 1) usuario = porNome[0].usuario;
+    else if (porNome.length > 1) ambiguo = true;
+    else if (porPrimeiro.length === 1) usuario = porPrimeiro[0].usuario;
+    else if (porPrimeiro.length > 1) ambiguo = true;
+
+    /* Só este caso precisa de resposta própria: sem ela, quem tem xará
+       na equipe nunca descobriria que precisa digitar o nome completo. */
+    if (ambiguo) {
+      return erro('Há mais de uma pessoa com esse nome. Digite o nome completo.', 409);
+    }
+
+    /* Nome que não existe também tenta entrar — com um endereço que
+       nunca vai existir. Assim a resposta demora o mesmo tanto e diz a
+       mesma coisa, e não dá para separar "não existe" de "senha errada". */
+    const email = usuario
+      ? montarEmail(igrejaEntrada.codigo, usuario)
+      : montarEmail(igrejaEntrada.codigo, 'nao.existe.' + crypto.randomUUID().slice(0, 8));
+
+    const login = await fetch(`${URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: { apikey: SERVICE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: senha }),
+    });
+
+    if (!login.ok) {
+      await anotarErro(origem, codigo);
+      return erro('Nome ou senha incorretos. Confira com a liderança como você está cadastrado.', 401);
+    }
+
+    await limparErros(origem, codigo);
+    return responder(await login.json());
+  }
+
   /* ---------- Daqui para baixo, só líder ou administrador ---------- */
   const chamador = await quemChama(req);
   if (!chamador) return erro('Faça login novamente.', 401);
@@ -131,7 +260,7 @@ Deno.serve(async (req) => {
   if (acao === 'criar_acesso') {
     const { nome, usuario, senha, papel, membro_id } = corpo;
     if (!nome || !usuario || !senha) return erro('Informe nome, usuário e senha.');
-    if (senha.length < 4) return erro('A senha precisa de 4 caracteres ou mais.');
+    if (senha.length < 6) return erro('A senha precisa de 6 caracteres ou mais.');
     if (papel === 'admin' && chamador.papel !== 'admin') {
       return erro('Só um administrador cria outro administrador.', 403);
     }
@@ -163,7 +292,7 @@ Deno.serve(async (req) => {
   if (acao === 'trocar_senha') {
     const { usuario_id, senha } = corpo;
     if (!usuario_id || !senha) return erro('Informe quem é e a nova senha.');
-    if (senha.length < 4) return erro('A senha precisa de 4 caracteres ou mais.');
+    if (senha.length < 6) return erro('A senha precisa de 6 caracteres ou mais.');
 
     const { data: alvo } = await admin.from('usuarios')
       .select('auth_id,papel').eq('id', usuario_id).eq('igreja_id', igreja.id).maybeSingle();

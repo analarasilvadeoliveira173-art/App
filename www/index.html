@@ -2935,38 +2935,34 @@ function procurarAcesso(identificador){
   return {tipo:'nenhum'};
 }
 
-/* Erros que a função do banco devolve, traduzidos para quem está entrando. */
-const ERROS_ENTRADA = {
-  IGREJA_NAO_ENCONTRADA:'Não encontrei esse código de igreja. Confira com a liderança.',
-  IGREJA_SUSPENSA:'O acesso desta igreja está suspenso. Fale com quem contratou o aplicativo.',
-  NOME_AMBIGUO:'Há mais de uma pessoa com esse nome. Digite o nome completo.',
-  PESSOA_NAO_ENCONTRADA:'Não encontrei esse nome nesta igreja. Confira com a liderança.'
-};
+/* Tudo o que exige poder que o aplicativo não tem — entrar, criar acesso,
+   trocar senha — passa por aqui. A chave secreta fica no servidor. */
+const ACESSO_URL = SUPABASE_URL+'/functions/v1/acesso';
+
+async function chamarAcesso(corpo, token){
+  let r;
+  try{
+    r = await fetch(ACESSO_URL,{
+      method:'POST',
+      headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json',
+               Authorization:'Bearer '+(token||SUPABASE_KEY)},
+      body:JSON.stringify(corpo)
+    });
+  }catch(e){ throw new Error('Sem conexão agora. Tente de novo em instantes.'); }
+  const dados = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(dados.erro || 'Não consegui completar essa ação agora.');
+  return dados;
+}
 
 /* Na nuvem, quem confere a senha é o servidor: o app manda código, nome e
-   senha, e recebe de volta um crachá que só abre aquela igreja. */
+   senha, e recebe de volta um crachá que só abre aquela igreja.
+
+   O app não pergunta mais "esse nome existe?" antes de tentar a senha —
+   perguntar isso deixava qualquer um descobrir, um nome por vez, quem é
+   da equipe. Agora nome errado e senha errada respondem igual. */
 async function entrarNaNuvem(codigo, nome, senha){
-  const rpc = await fetch(SUPABASE_URL+'/rest/v1/rpc/email_de_acesso',{
-    method:'POST',
-    headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
-    body:JSON.stringify({p_codigo:codigo,p_nome:nome})
-  });
-  if(!rpc.ok){
-    const detalhe = await rpc.json().catch(()=>({}));
-    const chave = Object.keys(ERROS_ENTRADA).find(k=>String(detalhe.message||'').includes(k));
-    throw new Error(chave ? ERROS_ENTRADA[chave] : 'Não consegui verificar esse acesso agora.');
-  }
-  const email = await rpc.json();
-  if(!email) throw new Error(ERROS_ENTRADA.PESSOA_NAO_ENCONTRADA);
+  const dados = await chamarAcesso({acao:'entrar', codigo, nome, senha});
 
-  const login = await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=password',{
-    method:'POST',
-    headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},
-    body:JSON.stringify({email,password:senha})
-  });
-  if(!login.ok) throw new Error('Senha incorreta.');
-
-  const dados = await login.json();
   nuvem.codigo = String(codigo).trim().toUpperCase();
   guardarTokens(dados);
 

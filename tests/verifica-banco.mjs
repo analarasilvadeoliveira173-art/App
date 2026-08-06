@@ -117,9 +117,15 @@ grant execute on all functions in schema auth to anon, authenticated;
   ok(`há políticas de acesso definidas (${qtdPoliticas})`, qtdPoliticas >= 20, `só ${qtdPoliticas}`);
 
   // ---------- o teste de isolamento ----------
+  // O Supabase expõe as tabelas por HTTP; quem segura o acesso é a
+  // política, não a permissão. Já as funções ficam só com as que o
+  // aplicativo realmente chama — dar todas aqui esconderia justamente
+  // o que este teste precisa provar que está fechado.
   psql(['-q', '-c',
     'grant select,insert,update,delete on all tables in schema public to authenticated, anon;' +
-    'grant execute on all functions in schema public to authenticated, anon;'], 'ekklesia');
+    'grant execute on function public.minha_igreja(), public.meu_papel(), ' +
+    'public.meu_membro_id(), public.sou_lideranca(), public.sou_admin(), ' +
+    'public.unaccent_simples(text) to authenticated, anon;'], 'ekklesia');
 
   const saida = psql(['-qtA', '-f', join(RAIZ, 'supabase/teste-de-isolamento.sql')], 'ekklesia');
   const casos = saida.split('\n').filter(l => l.includes('|') && /PASSOU|FALHOU/.test(l));
