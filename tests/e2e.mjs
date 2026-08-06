@@ -239,6 +239,17 @@ try {
   const vezes = await pagina.evaluate(id => (D.louvores.find(l => l.id === id) || {}).vezes_cantado, contagem.louvorId);
   ok('louvor cantado duas vezes no culto conta 2', vezes === 2, `contou ${vezes}`);
 
+  console.log('\nNavegação fecha janelas abertas');
+  await pagina.evaluate(() => window.ir('ensaios'));
+  await pagina.waitForTimeout(400);
+  await pagina.evaluate(() => { if (D.ensaios[0]) window.ensaioDetalhe(D.ensaios[0].id); });
+  await pagina.waitForTimeout(500);
+  const abriuJanela = (await pagina.locator('#ov').count()) > 0;
+  await pagina.evaluate(() => window.ir('relatorios'));
+  await pagina.waitForTimeout(500);
+  ok('trocar de tela fecha a janela que estava aberta',
+    !abriuJanela || (await pagina.locator('#ov').count()) === 0);
+
   console.log('\nPersistência');
   const antes = await pagina.evaluate(() => ({ l: D.louvores.length, a: D.avisos.length, c: D.cultos.length }));
   await pagina.reload({ waitUntil: 'networkidle' });
@@ -283,7 +294,7 @@ try {
   }
 
   console.log('\nCelular: nada de arrastar a tela para o lado');
-  for (const tela of ['escalas', 'louvores', 'membros', 'painel']) {
+  for (const tela of ['escalas', 'louvores', 'membros', 'relatorios', 'ensaios', 'perfil', 'painel']) {
     await celular.evaluate(t => window.ir(t), tela);
     await celular.waitForTimeout(450);
     const larguras = await celular.evaluate(() => ({

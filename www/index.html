@@ -159,7 +159,7 @@ button{font-family:inherit}
 .input:focus,.select:focus,textarea.input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
 textarea.input{resize:vertical;min-height:74px}
 .select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%235B6B7F' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 13px center;padding-right:34px}
+  background-repeat:no-repeat;background-position:right var(--e4) center;padding-right:var(--e7)}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .hint{font-size:var(--t-1);color:var(--muted);margin-top:6px}
 
@@ -329,9 +329,14 @@ table.tbl tr:hover td{background:#fafcfd}
 .step-line{flex:1;height:1px;background:var(--line);min-width:14px}
 .wz-card{padding:22px}
 .pick-row{display:flex;align-items:center;gap:12px;padding:11px;border:1px solid var(--line);border-radius:var(--r-md);margin-bottom:9px}
-.assign-row{display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}
+/* A coluna do rótulo era fixa em 120px, mas os chips explicativos
+   ("1 vocal responsável", "pode marcar vários") são mais largos que isso e
+   vazavam por cima dos campos ao lado. */
+.assign-row{display:grid;grid-template-columns:minmax(150px,auto) 1fr;gap:var(--e4);align-items:center;
+  padding:var(--e3) 0;border-bottom:1px solid var(--line)}
+.assign-row .fn .chip{margin-top:var(--e1);display:inline-flex}
 .assign-row:last-child{border-bottom:none}
-.assign-row .fn{font-weight:600;font-size:var(--t0)}
+.assign-row .fn{font-weight:600;font-size:var(--t0);min-width:0}
 
 /* ---------- Presença segmentada ---------- */
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden}
@@ -444,7 +449,7 @@ body{font-family:'DM Sans',sans-serif;letter-spacing:-.005em}
 .kpi .num.num-data{font-size:var(--t2);letter-spacing:-.005em;white-space:nowrap}
 .kpi .k-label{font-size:var(--t-1);margin-top:var(--e1);color:var(--muted);line-height:1.4}
 .item{padding:var(--e5)}.item:hover{border-color:transparent;transform:translateY(-2px);box-shadow:var(--sombra-3)}
-.input,.select,textarea.input{border-color:var(--line);border-radius:var(--r-md);background:var(--surface);
+.input,.select,textarea.input{border-color:var(--line);border-radius:var(--r-md);background-color:var(--surface);
   padding:var(--e3) var(--e4);font-size:var(--t1)}
 .input:focus,.select:focus,textarea.input:focus{box-shadow:0 0 0 4px rgba(18,63,52,.10)}
 .field label{font-size:var(--t-1);font-weight:600;color:var(--ink-2);margin-bottom:var(--e2);letter-spacing:.005em}
@@ -566,6 +571,9 @@ table.tbl td{padding:var(--e4)}table.tbl tr:hover td{background:var(--surface2)}
 .item-incompleta:before{background:var(--warn)}
 .item-realizada:before{background:var(--ok)}
 .item-rascunho:before{background:var(--line)}
+.item-ens-agendado:before{background:var(--info)}
+.item-ens-realizado:before{background:var(--ok)}
+.item-ens-cancelado:before{background:var(--bad)}
 .item:focus-visible{outline:3px solid var(--primary-soft);outline-offset:2px}
 .it-quando{display:inline-block;margin-left:9px;padding:3px 9px;border-radius:var(--r-full);
   background:var(--primary-soft);color:var(--primary-ink);font-family:'DM Sans';font-size:var(--t-2);font-weight:700;
@@ -626,10 +634,11 @@ table.tbl td{padding:var(--e4)}table.tbl tr:hover td{background:var(--surface2)}
 
 :root[data-theme="dark"] .input,
 :root[data-theme="dark"] .select,
-:root[data-theme="dark"] textarea.input{background:var(--surface2);border-color:var(--line);color:var(--ink)}
+:root[data-theme="dark"] textarea.input{background-color:var(--surface2);border-color:var(--line);color:var(--ink)}
 :root[data-theme="dark"] .input::placeholder,
 :root[data-theme="dark"] textarea.input::placeholder{color:#6F7E77}
-:root[data-theme="dark"] .select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%2394A39C' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")}
+:root[data-theme="dark"] .select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%2394A39C' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right var(--e4) center}
 :root[data-theme="dark"] .btn{background:var(--surface2);border-color:var(--line);color:var(--ink)}
 :root[data-theme="dark"] .btn:hover{background:#26332D;border-color:#38473F}
 :root[data-theme="dark"] .btn-primary{background:var(--primary);border-color:var(--primary);color:#fff}
@@ -1464,6 +1473,9 @@ function ir(t){
     if(!wizardTemDados()) W=null;
     else{ confirmar('Sair da montagem da escala? O que foi preenchido será descartado.',()=>{ W=null; ir(t); },'Sair sem salvar','btn-primary'); return; }
   }
+  /* Detalhes de ensaio e histórico abrem em janela. Trocar de tela pelo menu
+     deixava essa janela flutuando por cima da tela nova. */
+  closeModal();
   tela=t; renderMenu(); window.scrollTo(0,0);
   ({painel:renderPainel,escalas:renderEscalas,louvores:renderLouvores,ensaios:renderEnsaios,membros:renderMembros,relatorios:renderRelatorios,perfil:renderPerfil,usuarios:renderUsuarios,configuracoes:renderConfiguracoes}[t]||renderPainel)();
 }
@@ -2369,13 +2381,28 @@ function renderEnsaios(){
   main.innerHTML=`
     <div class="page-head"><div><h2>Ensaios</h2><p>Agenda e preparação</p></div>
       ${podeEditar()?`<div class="head-actions"><button class="btn btn-primary" onclick="modalEnsaio()">+ Novo ensaio</button></div>`:''}</div>
-    ${ens.length?`<div class="list">${ens.map(cardEnsaio).join('')}</div>`:estadoVazio(ENS_ICON,'Nenhum ensaio',podeEditar()?'Agende o primeiro ensaio.':'Nenhum ensaio agendado.',podeEditar()?`<button class="btn btn-primary" onclick="modalEnsaio()">+ Novo ensaio</button>`:'')}`;
+    ${ens.length?`<div class="list stagger">${ens.map(cardEnsaio).join('')}</div>`:estadoVazio(ENS_ICON,'Nenhum ensaio',podeEditar()?'Agende o primeiro ensaio.':'Nenhum ensaio agendado.',podeEditar()?`<button class="btn btn-primary" onclick="modalEnsaio()">+ Novo ensaio</button>`:'')}`;
 }
-function cardEnsaio(e){ const conv=(e.membros_convocados||[]).length; const ck=e.checklist||[]; const done=ck.filter(x=>x.done).length;
-  return `<div class="item" onclick="ensaioDetalhe('${e.id}')">
-    <div class="it-top"><div><div class="it-date">${fmtDataCurta(e.data)}</div><div class="it-sub">${esc(e.horario||'—')}${e.local?' · '+esc(e.local):''}</div></div>${chip(STATUS_ENSAIO,e.status)}</div>
-    <div class="it-meta"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${IC.users}</svg>${conv} convocados</span>
-      ${ck.length?`<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${IC.check}</svg>${done}/${ck.length} checklist</span>`:''}</div></div>`;
+function cardEnsaio(e){
+  const conv=(e.membros_convocados||[]).length; const ck=e.checklist||[]; const done=ck.filter(x=>x.done).length;
+  /* Mesma peça do cartão de culto: faixa de status, prazo e barra de preparo. */
+  const futuro=e.data>=hojeISO(), dias=-diasDesde(e.data);
+  const quando = (!futuro||e.status!=='agendado') ? '' : dias===0?'hoje':dias===1?'amanhã':dias<=14?'em '+dias+' dias':'';
+  const pct = ck.length?Math.round(done/ck.length*100):null;
+  return `<div class="item item-ens-${esc(e.status||'agendado')}" onclick="ensaioDetalhe('${e.id}')"
+      role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();ensaioDetalhe('${e.id}')}">
+    <div class="it-top">
+      <div>
+        <div class="it-date">${fmtDataCurta(e.data)}${quando?`<span class="it-quando">${quando}</span>`:''}</div>
+        <div class="it-sub">${e.local?esc(e.local):'Local não informado'}</div>
+      </div>${chip(STATUS_ENSAIO,e.status)}
+    </div>
+    ${pct!==null?`<div class="it-barra" title="${done} de ${ck.length} itens do checklist"><i style="width:${pct}%"></i></div>`:''}
+    <div class="it-meta">
+      ${e.horario?`<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${IC.clock}</svg>${esc(e.horario)}</span>`:''}
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${IC.users}</svg>${conv} convocados</span>
+      ${ck.length?`<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${IC.check}</svg>${done}/${ck.length} no checklist</span>`:''}
+    </div></div>`;
 }
 function ensaioDetalhe(id){
   CURRENT_ENSAIO=id; const e=D.ensaios.find(x=>x.id===id); if(!e)return; const ed=podeEditar();
@@ -2541,16 +2568,16 @@ function renderRelatorios(){
       ${kpi('',IC.check,ensRealizados+'/'+D.ensaios.length,'Ensaios realizados')}
     </div>
     <div class="section-title">Frequência por membro</div>
-    <div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Membro</th><th>Escalas</th><th>Confirmados</th><th>Ausências</th><th>Presença</th></tr></thead><tbody>
-      ${freq.length?freq.map(x=>`<tr><td><div class="cell-name">${avatar(x.m.nome,x.m.cor_avatar,'av-sm')}<b>${esc(x.m.nome)}</b></div></td><td>${x.conv}</td><td>${x.conf}</td><td>${x.aus}</td><td>${x.pp==null?'—':x.pp+'%'}</td></tr>`).join(''):`<tr><td colspan="5" style="color:var(--muted)">Sem dados ainda.</td></tr>`}
+    <div class="card"><div class="tbl-wrap"><table class="tbl tbl-cartoes"><thead><tr><th>Membro</th><th>Escalas</th><th>Confirmados</th><th>Ausências</th><th>Presença</th></tr></thead><tbody>
+      ${freq.length?freq.map(x=>`<tr><td><div class="cell-name">${avatar(x.m.nome,x.m.cor_avatar,'av-sm')}<b>${esc(x.m.nome)}</b></div></td><td data-label="Escalas">${x.conv}</td><td data-label="Confirmados">${x.conf}</td><td data-label="Ausências">${x.aus}</td><td data-label="Presença">${x.pp==null?'—':x.pp+'%'}</td></tr>`).join(''):`<tr><td colspan="5" style="color:var(--muted)">Sem dados ainda.</td></tr>`}
     </tbody></table></div></div>
     <div class="section-title">Louvores mais cantados</div>
-    <div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Louvor</th><th>Categoria</th><th>Vezes</th><th>Última vez</th></tr></thead><tbody>
-      ${topLouv.length?topLouv.map(l=>`<tr><td><b>${esc(l.nome)}</b></td><td>${l.categoria?`<span class="chip chip-muted">${esc(l.categoria)}</span>`:'—'}</td><td>${l.vezes_cantado||0}</td><td>${l.ultima_vez?fmtData(l.ultima_vez):'—'}</td></tr>`).join(''):`<tr><td colspan="4" style="color:var(--muted)">Sem louvores.</td></tr>`}
+    <div class="card"><div class="tbl-wrap"><table class="tbl tbl-cartoes"><thead><tr><th>Louvor</th><th>Categoria</th><th>Vezes</th><th>Última vez</th></tr></thead><tbody>
+      ${topLouv.length?topLouv.map(l=>`<tr><td><b>${esc(l.nome)}</b></td><td data-label="Categoria">${l.categoria?`<span class="chip chip-muted">${esc(l.categoria)}</span>`:'—'}</td><td data-label="Vezes cantado">${l.vezes_cantado||0}</td><td data-label="Última vez">${l.ultima_vez?fmtData(l.ultima_vez):'—'}</td></tr>`).join(''):`<tr><td colspan="4" style="color:var(--muted)">Sem louvores.</td></tr>`}
     </tbody></table></div></div>
     <div class="section-title">Cultos com funções em aberto</div>
-    ${incompletos.length?`<div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Data</th><th>Culto</th><th>Pendência</th><th></th></tr></thead><tbody>
-      ${incompletos.map(c=>{const v=vagosDoCulto(c.id);return `<tr><td style="white-space:nowrap">${fmtData(c.data)}</td><td>${esc(c.tipo||'Culto')}</td><td>${esc(v.join(', '))} em aberto</td><td><button class="btn btn-sm" onclick="abrirDetalhe('${c.id}')">Ver</button></td></tr>`;}).join('')}
+    ${incompletos.length?`<div class="card"><div class="tbl-wrap"><table class="tbl tbl-cartoes"><thead><tr><th>Culto</th><th>Data</th><th>Pendência</th><th></th></tr></thead><tbody>
+      ${incompletos.map(c=>{const v=vagosDoCulto(c.id);return `<tr><td><b>${esc(c.tipo||'Culto')}</b></td><td data-label="Data" style="white-space:nowrap">${fmtData(c.data)}</td><td data-label="Pendência">${esc(v.join(', '))} em aberto</td><td><button class="btn btn-sm" onclick="abrirDetalhe('${c.id}')">Ver</button></td></tr>`;}).join('')}
     </tbody></table></div></div>`:`<div class="card card-pad" style="color:var(--muted);font-size:var(--t0)">Todas as escalas estão completas. 🙌</div>`}`;
 }
 
