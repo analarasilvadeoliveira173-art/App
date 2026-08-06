@@ -136,6 +136,84 @@ try {
     }
   }
 
+  console.log('\nMontagem de escala');
+  await pagina.locator('.lateral [data-tela="escalas"]').click();
+  await pagina.waitForTimeout(300);
+  const cultosAntes = await pagina.locator('[data-abrir]').count();
+  await pagina.locator('[data-nova]').first().click();
+  await pagina.waitForTimeout(400);
+  ok('o assistente abre no primeiro passo', await pagina.locator('#as-data').isVisible());
+
+  await pagina.locator('#as-data').fill('2026-12-25');
+  await pagina.locator('#as-tipo').fill('Culto de Natal');
+  await pagina.getByRole('button', { name: /^Avançar$/ }).click();
+  await pagina.waitForTimeout(350);
+  ok('o segundo passo pergunta quem toca', (await pagina.locator('[data-funcao]').count()) > 0);
+
+  // A lista precisa separar quem toca aquilo de quem não toca: é o que
+  // torna a montagem rápida em vez de uma rolagem com o ministério todo.
+  const grupos = await pagina.locator('[data-funcao]').first().locator('optgroup').allTextContents();
+  ok('separa quem toca a função dos demais', grupos.length >= 1, grupos.join(' | '));
+
+  const primeiroSelect = pagina.locator('[data-funcao]').first();
+  const opcaoValida = await primeiroSelect.locator('optgroup option').first().getAttribute('value');
+  await primeiroSelect.selectOption(opcaoValida);
+
+  await pagina.getByRole('button', { name: /^Avançar$/ }).click();
+  await pagina.waitForTimeout(350);
+  ok('o terceiro passo pergunta o repertório', await pagina.locator('#as-add').isVisible());
+
+  const louvorId = await pagina.locator('#as-add option').nth(1).getAttribute('value');
+  await pagina.locator('#as-add').selectOption(louvorId);
+  await pagina.getByRole('button', { name: /^Incluir$/ }).click();
+  await pagina.waitForTimeout(300);
+  ok('o louvor entra na lista', (await pagina.locator('[data-tirar]').count()) === 1);
+
+  // Voltar não pode apagar o que já foi digitado: era o jeito mais
+  // rápido de a pessoa perder o trabalho e desistir do assistente.
+  await pagina.getByRole('button', { name: /^Voltar$/ }).click();
+  await pagina.waitForTimeout(300);
+  await pagina.getByRole('button', { name: /^Avançar$/ }).click();
+  await pagina.waitForTimeout(300);
+  ok('voltar e avançar não perde o repertório', (await pagina.locator('[data-tirar]').count()) === 1);
+
+  await pagina.getByRole('button', { name: /Salvar escala/i }).click();
+  await pagina.waitForTimeout(800);
+  const cultosDepois = await pagina.locator('[data-abrir]').count();
+  ok('o assistente cria o culto', cultosDepois === cultosAntes + 1, `${cultosAntes} → ${cultosDepois}`);
+
+  console.log('\nCadastros');
+  await pagina.locator('.lateral [data-tela="louvores"]').click();
+  await pagina.waitForTimeout(300);
+  await pagina.locator('[data-novo]').first().click();
+  await pagina.waitForTimeout(350);
+  await pagina.locator('#lv-nome').fill("Ana D'Ávila <script>alert(1)</script>");
+  await pagina.getByRole('button', { name: /^Adicionar$/ }).click();
+  await pagina.waitForTimeout(700);
+  const tabelaTexto = await pagina.locator('table.tabela').first().textContent();
+  ok('nome com apóstrofo e marcação aparece como foi escrito',
+    tabelaTexto.includes("Ana D'Ávila <script>"), 'não encontrei o nome inteiro');
+  ok('nada foi injetado como elemento',
+    (await pagina.locator('table.tabela script').count()) === 0);
+
+  await pagina.locator('#lv-busca').fill('Ousado');
+  await pagina.waitForTimeout(500);
+  const achados = await pagina.locator('table.tabela tbody tr').count();
+  ok('a busca filtra o repertório', achados === 1, `${achados} linha(s)`);
+  await pagina.locator('#lv-busca').fill('');
+  await pagina.waitForTimeout(500);
+
+  await pagina.locator('.lateral [data-tela="membros"]').click();
+  await pagina.waitForTimeout(300);
+  ok('membros lista a equipe', (await pagina.locator('table.tabela tbody tr').count()) >= 5);
+  await pagina.locator('[data-editar]').first().click();
+  await pagina.waitForTimeout(350);
+  ok('o cadastro traz as funções que a pessoa toca',
+    (await pagina.locator('#mb-funcoes input:checked').count()) > 0);
+  await pagina.evaluate(() => window.dispatchEvent(new KeyboardEvent('keydown')));
+  await pagina.locator('.fechar-janela').click();
+  await pagina.waitForTimeout(300);
+
   console.log('\nPapéis');
   await pagina.evaluate(() => localStorage.clear());
   await pagina.goto(BASE, { waitUntil: 'networkidle' });
@@ -169,8 +247,17 @@ try {
   await tel.getByRole('button', { name: /^Entrar$/ }).click();
   await tel.waitForTimeout(700);
   ok('mostra a navegação de baixo', await tel.locator('.barra-baixo').isVisible());
-  const sobra = await tel.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-  ok('a página não rola para o lado', sobra <= 1, `sobram ${sobra}px`);
+
+  /* Uma tela de cada vez. Já aconteceu de o teste cobrir quatro telas e
+     deixar de fora justamente a única que estourava a largura. */
+  for (const chave of ['painel', 'escalas', 'louvores', 'membros', 'relatorios', 'ensaios', 'perfil', 'usuarios', 'configuracoes']) {
+    await tel.evaluate((c) => {
+      document.querySelector(`[data-tela="${c}"]`)?.click();
+    }, chave);
+    await tel.waitForTimeout(250);
+    const sobra = await tel.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    ok(`${chave} cabe na largura do celular`, sobra <= 1, `sobram ${sobra}px`);
+  }
 
   console.log('\nErros de JavaScript');
   ok('nenhum erro no console', errosDePagina.length === 0, errosDePagina.join(' | '));

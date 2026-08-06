@@ -20,16 +20,19 @@ import { carregar, cairParaOAparelho, noAparelho } from './dados/indice.js';
 import { carregarDoAparelho, semearDemonstracao } from './dados/local.js';
 import { telaEntrada } from './telas/entrada.js';
 import { telaPainel } from './telas/painel.js';
+import { telaEscalas } from './telas/escalas.js';
+import { telaLouvores } from './telas/louvores.js';
+import { telaMembros } from './telas/membros.js';
 
 const raiz = document.getElementById('raiz');
 
 /* ---------------- As telas ---------------- */
 const TELAS = [
   { chave: 'painel', titulo: 'Painel', icone: IC.painel, desenhar: telaPainel, rodape: true },
-  { chave: 'escalas', titulo: 'Escalas', icone: IC.escalas, rodape: true },
-  { chave: 'louvores', titulo: 'Louvores', icone: IC.louvores, rodape: true },
+  { chave: 'escalas', titulo: 'Escalas', icone: IC.escalas, desenhar: telaEscalas, rodape: true },
+  { chave: 'louvores', titulo: 'Louvores', icone: IC.louvores, desenhar: telaLouvores, rodape: true },
   { chave: 'ensaios', titulo: 'Ensaios', icone: IC.ensaios },
-  { chave: 'membros', titulo: 'Membros', icone: IC.membros, soLideranca: true },
+  { chave: 'membros', titulo: 'Membros', icone: IC.membros, desenhar: telaMembros, soLideranca: true },
   { chave: 'relatorios', titulo: 'Relatórios', icone: IC.relatorios, soLideranca: true },
   { chave: 'avisos', titulo: 'Mural', icone: IC.avisos },
   { chave: 'perfil', titulo: 'Meu perfil', icone: IC.perfil, rodape: true },

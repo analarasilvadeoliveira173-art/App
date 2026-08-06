@@ -82,7 +82,11 @@
 .cartao-pessoa b { display: block; font-size: var(--t-1); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cartao-pessoa small { color: var(--texto-fraco); font-size: var(--t-2); }
 
-.conteudo { padding: var(--e6); max-width: 1180px; width: 100%; }
+/* min-width:0 é o que segura a tabela larga dentro da própria caixa.
+   Sem ele, um item de grid cresce até o tamanho do conteúdo — o
+   overflow-x da tabela nunca chega a valer, e a página inteira passa a
+   arrastar para o lado no celular. */
+.conteudo { padding: var(--e6); max-width: 1180px; width: 100%; min-width: 0; }
 @media (max-width: 900px) { .conteudo { padding: var(--e4); } }
 
 /* ---------------- Celular ---------------- */
